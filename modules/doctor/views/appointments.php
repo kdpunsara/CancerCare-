@@ -58,6 +58,42 @@ function formatDate($date) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Appointments - Cancer Care</title>
     <link rel="stylesheet" href="../../../public/css/base.css">
+    <style>
+        .doctor-filter-form {
+            display: flex !important;
+            align-items: flex-end;
+            gap: 18px 20px;
+            width: 100%;
+        }
+
+        .doctor-filter-form .form-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex: 1 1 0;
+            min-width: 0;
+        }
+
+        .doctor-filter-form .form-field-action {
+            flex: 0 0 auto;
+            justify-content: flex-end;
+        }
+
+        .doctor-filter-form .form-field-action .btn-primary {
+            margin-top: 22px;
+        }
+
+        @media (max-width: 640px) {
+            .doctor-filter-form {
+                flex-wrap: wrap;
+            }
+
+            .doctor-filter-form .form-field,
+            .doctor-filter-form .form-field-action {
+                flex: 1 1 100%;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="app">
@@ -93,7 +129,7 @@ $current_page = 'appointments'; // Change this to 'dashboard', 'prescriptions', 
                 
                 <!-- Search and Filter Section -->
                 <div class="card form-card" style="padding-bottom: 24px; margin-bottom: 24px;">
-                    <form method="GET" action="doctor_appointments.php" class="form-grid" style="align-items: end;">
+                    <form method="GET" action="doctor_appointments.php" class="doctor-filter-form">
                         <div class="form-field">
                             <label>Search Patient</label>
                             <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search by name or ID...">
@@ -108,8 +144,9 @@ $current_page = 'appointments'; // Change this to 'dashboard', 'prescriptions', 
                                 <option value="Lab Review" <?php echo $type_filter === 'Lab Review' ? 'selected' : ''; ?>>Lab Review</option>
                             </select>
                         </div>
-                        <div class="form-field" style="justify-content: flex-start;">
-                            <button type="submit" class="btn-primary" style="padding: 12px 24px;">Filter</button>
+                        <div class="form-field form-field-action">
+                            <label class="sr-only">Filter</label>
+                            <button type="submit" class="btn-primary">Filter</button>
                         </div>
                     </form>
                 </div>

@@ -654,10 +654,32 @@ button{ font-family: inherit; cursor: pointer; }
   gap: 18px 20px;
 }
 
+.doctor-filter-form{
+  display: grid;
+  grid-template-columns: minmax(220px, 1.8fr) minmax(180px, 1fr) auto;
+  gap: 18px 20px;
+  align-items: end;
+}
+
 .form-field{
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+
+.form-field-action{
+  justify-content: flex-end;
+}
+
+.sr-only{
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
 }
 
 .form-field-wide{
@@ -809,6 +831,8 @@ button{ font-family: inherit; cursor: pointer; }
   .bottom-grid{ gap: 14px; }
   .data-table{ font-size: 12.5px; }
   .data-table th, .data-table td{ padding: 11px; }
+  .doctor-filter-form{ grid-template-columns: 1fr 1fr; }
+  .form-field-action{ grid-column: 1 / -1; }
 }
 
 @media (max-width: 480px){
@@ -831,6 +855,8 @@ button{ font-family: inherit; cursor: pointer; }
   .edit-btn{ margin-left: 0; }
   .resource-grid{ grid-template-columns: 1fr; }
   .form-grid{ grid-template-columns: 1fr; }
+  .doctor-filter-form{ grid-template-columns: 1fr; }
+  .form-field-action{ grid-column: auto; }
   .form-actions{ flex-direction: column-reverse; }
   .btn-primary, .btn-secondary{ width: 100%; }
   .auth-card, .auth-card-wide{ padding: 24px 18px; max-width: 100%; }
