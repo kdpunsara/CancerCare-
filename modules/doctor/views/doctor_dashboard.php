@@ -80,7 +80,7 @@ $current_page = 'dashboard'; // Change this to 'dashboard', 'prescriptions', etc
                     </div>
                 </div>
                 <div class="topbar-actions">
-                    <button class="signout-btn">Sign Out</button>
+                    <a href="../../../logout.php" class="signout-btn">Sign Out</a>
                 </div>
             </header>
 

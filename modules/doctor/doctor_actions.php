@@ -17,6 +17,42 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $action = $_POST['action'] ?? '';
 
 switch ($action) {
+    case 'update_profile':
+        $email = trim($_POST['email'] ?? '');
+        $phone = trim($_POST['phone'] ?? '');
+        $first_name = trim($_POST['first_name'] ?? '');
+        $last_name = trim($_POST['last_name'] ?? '');
+        $password = $_POST['password'] ?? '';
+
+        if ($email === '' || $first_name === '' || $last_name === '') {
+            header("Location: views/doctor_profile.php?error=invalid_profile");
+            exit();
+        }
+
+        $conn->begin_transaction();
+        try {
+            if ($password !== '') {
+                $password_hash = password_hash($password, PASSWORD_DEFAULT);
+                $stmt_user = $conn->prepare("UPDATE User SET email = ?, phone = ?, password_hash = ?, must_change_password = 0 WHERE user_id = ?");
+                $stmt_user->bind_param("sssi", $email, $phone, $password_hash, $doctor_id);
+            } else {
+                $stmt_user = $conn->prepare("UPDATE User SET email = ?, phone = ? WHERE user_id = ?");
+                $stmt_user->bind_param("ssi", $email, $phone, $doctor_id);
+            }
+            $stmt_user->execute();
+
+            $stmt_doctor = $conn->prepare("UPDATE Doctor SET first_name = ?, last_name = ? WHERE user_id = ?");
+            $stmt_doctor->bind_param("ssi", $first_name, $last_name, $doctor_id);
+            $stmt_doctor->execute();
+
+            $conn->commit();
+            header("Location: views/doctor_profile.php?msg=profile_updated");
+        } catch (Exception $e) {
+            $conn->rollback();
+            header("Location: views/doctor_profile.php?error=update_error");
+        }
+        exit();
+
     case 'update_status':
         $appt_id = intval($_POST['appointment_id']);
         $new_status = $_POST['status'];
@@ -68,6 +104,40 @@ switch ($action) {
     case 'cancel_patient_search':
         unset($_SESSION['new_rx_patient_id']);
         header("Location: views/doctor_prescription.php");
+        exit();
+
+    case 'delete_prescription':
+        $prescription_id = intval($_POST['prescription_id'] ?? 0);
+
+        if ($prescription_id <= 0) {
+            header("Location: views/doctor_prescription.php?error=invalid_prescription");
+            exit();
+        }
+
+        $conn->begin_transaction();
+        try {
+            $stmt_verify = $conn->prepare("SELECT prescription_id FROM Prescription WHERE prescription_id = ? AND doctor_user_id = ?");
+            $stmt_verify->bind_param("ii", $prescription_id, $doctor_id);
+            $stmt_verify->execute();
+
+            if ($stmt_verify->get_result()->num_rows === 0) {
+                throw new Exception('Prescription not found or not owned by doctor.');
+            }
+
+            $stmt_items = $conn->prepare("DELETE FROM PrescriptionItem WHERE prescription_id = ?");
+            $stmt_items->bind_param("i", $prescription_id);
+            $stmt_items->execute();
+
+            $stmt_prescription = $conn->prepare("DELETE FROM Prescription WHERE prescription_id = ? AND doctor_user_id = ?");
+            $stmt_prescription->bind_param("ii", $prescription_id, $doctor_id);
+            $stmt_prescription->execute();
+
+            $conn->commit();
+            header("Location: views/doctor_prescription.php?msg=rx_deleted");
+        } catch (Exception $e) {
+            $conn->rollback();
+            header("Location: views/doctor_prescription.php?view=" . $prescription_id . "&error=delete_error");
+        }
         exit();
 
     case 'remove_prescription_item':

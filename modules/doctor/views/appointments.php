@@ -121,7 +121,7 @@ $current_page = 'appointments'; // Change this to 'dashboard', 'prescriptions', 
                     </div>
                 </div>
                 <div class="topbar-actions">
-                    <button class="signout-btn">Sign Out</button>
+                    <a href="../../../logout.php" class="signout-btn">Sign Out</a>
                 </div>
             </header>
 

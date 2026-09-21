@@ -255,7 +255,7 @@ function calculateAge($dob) {
                     </div>
                 </div>
                 <div class="topbar-actions">
-                    <a href="../../../index.php?logout=1" class="signout-btn">Sign Out</a>
+                    <a href="../../../logout.php" class="signout-btn">Sign Out</a>
                 </div>
             </header>
 
@@ -268,6 +268,10 @@ function calculateAge($dob) {
                 <?php elseif (isset($_GET['msg']) && $_GET['msg'] === 'rx_updated'): ?>
                     <div class="card panel">
                         <p class="panel-note">Prescription updated successfully.</p>
+                    </div>
+                <?php elseif (isset($_GET['msg']) && $_GET['msg'] === 'rx_deleted'): ?>
+                    <div class="card panel">
+                        <p class="panel-note">Prescription deleted successfully.</p>
                     </div>
                 <?php endif; ?>
 
@@ -630,8 +634,13 @@ function calculateAge($dob) {
 
                     <div class="form-actions" style="margin-top: 24px;">
                         <a href="doctor_prescription.php" class="btn-secondary">Close</a>
+                        <button type="submit" form="delete-prescription-form" class="btn-secondary" style="color: var(--red); border-color: var(--red);">Delete Prescription</button>
                         <button type="submit" class="btn-primary">Save Changes</button>
                     </div>
+                </form>
+                <form id="delete-prescription-form" method="POST" action="../doctor_actions.php" onsubmit="return confirm('Delete this prescription permanently? This cannot be undone.');">
+                    <input type="hidden" name="action" value="delete_prescription">
+                    <input type="hidden" name="prescription_id" value="<?php echo $view_prescription['prescription_id']; ?>">
                 </form>
             </div>
         </div>

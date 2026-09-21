@@ -18,6 +18,7 @@ CREATE TABLE User (
     username VARCHAR(50) UNIQUE NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
+    must_change_password TINYINT(1) NOT NULL DEFAULT 0,
     phone VARCHAR(20),
     role ENUM('patient', 'doctor', 'staff', 'pharmacist', 'benefactor', 'admin') NOT NULL,
     status ENUM('active', 'inactive', 'suspended') DEFAULT 'active',
@@ -282,8 +283,8 @@ VALUES (1001, '198510201234', 'Kamal', 'Perera', '1985-04-12', 'male', '123 Main
 -- 2. Sample Doctor
 INSERT INTO User (user_id, username, email, password_hash, phone, role, status) 
 VALUES (1002, 'dr_noel', 'noel.fernando@hospital.lk', '$2y$10$e0MYzXyjpJS7Pd0RVvHwHe.YYr3hFZhvvAUaQC1W0a1qOqz8y1m', '0718108247', 'doctor', 'active');
-INSERT INTO Doctor (user_id, first_name, last_name, specialization, qualification, license_no, consultation_fee, availability_status) 
-VALUES (1002, 'Noel', 'Fernando', 'Medical Oncology', 'MBBS, MD (Oncology)', 'SL-MED-9921', 2500.00, 'available');
+INSERT INTO Doctor (user_id, first_name, last_name, specialization, qualification, license_no) 
+VALUES (1002, 'Noel', 'Fernando', 'Medical Oncology', 'MBBS, MD (Oncology)', 'SL-MED-9921');
 
 -- 3. Sample Medical Staff
 INSERT INTO User (user_id, username, email, password_hash, phone, role, status) 

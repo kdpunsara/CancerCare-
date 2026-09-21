@@ -14,7 +14,7 @@ if (isset($_SESSION['user_id'])) {
         case 'staff': header("Location: modules/staff/views/dashboard.php"); break;
         case 'pharmacist': header("Location: modules/pharmacist/views/dashboard.php"); break;
         case 'benefactor': header("Location: modules/benefactor/views/dashboard.php"); break;
-        case 'admin': header("Location: modules/admin/views/dashboard.php"); break;
+        case 'admin': header("Location: modules/admin/views/admin_dashboard.php"); break;
         default: header("Location: index.php"); break;
     }
     exit();
@@ -31,7 +31,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     if (!empty($login_input) && !empty($password)) {
         // Query to check Username, User ID, OR Email
-        $sql = "SELECT user_id, username, email, password_hash, role, status 
+        $sql = "SELECT user_id, username, email, password_hash, must_change_password, role, status
                 FROM User 
                 WHERE username = ? OR user_id = ? OR email = ? 
                 LIMIT 1";
@@ -57,6 +57,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $_SESSION['user_id'] = $user['user_id'];
                 $_SESSION['username'] = $user['username'];
                 $_SESSION['role'] = $user['role'];
+
+                if ((int) $user['must_change_password'] === 1) {
+                    header("Location: change_password.php");
+                    exit();
+                }
                 
                 // Redirect based on role
                 switch ($user['role']) {
@@ -460,7 +465,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 </svg>
             </div>
             <div class="brand-name">
-                Apeksha OncoCare
+                CancerCare
                 <span>Hospital Management System</span>
             </div>
         </div>
@@ -597,7 +602,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             <!-- Footer links -->
             <div class="form-footer">
-                <p>Need help? <a href="#">Contact IT Support</a></p>
+                <p><b>Forgot your password?</b> Please contact the Hospital Administration Desk at 071 1791923 or 
+                    visit Room 43 for assistance. For security reasons, all password resets must be verified in person.</p>
                 
             </div>
         </div>

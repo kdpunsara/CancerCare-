@@ -79,7 +79,7 @@ function calculateAge($dob) {
                     </div>
                 </div>
                 <div class="topbar-actions">
-                    <a href="../../../index.php?logout=1" class="signout-btn">Sign Out</a>
+                    <a href="../../../logout.php" class="signout-btn">Sign Out</a>
                 </div>
             </header>
 
