@@ -22,6 +22,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || isset($_GET['action'])) {
             $first_name = trim($_POST['first_name'] ?? '');
             $last_name  = trim($_POST['last_name'] ?? '');
 
+            if ($role === 'benefactor') {
+                header("Location: views/user_management.php?add=1&add_role=doctor&error=role_not_allowed");
+                exit();
+            }
+
             if (empty($username) || empty($email) || empty($password) || empty($role) || empty($first_name) || empty($last_name)) {
                 header("Location: views/user_management.php?add=1&add_role=" . urlencode($role) . "&error=invalid_user");
                 exit();

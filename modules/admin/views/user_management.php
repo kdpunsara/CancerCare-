@@ -53,7 +53,7 @@ function statusBadge($status) {
 
 // ---- Modal State & Role Selection ----
 $modal_open   = isset($_GET['add']);
-$valid_roles  = ['doctor', 'patient', 'staff', 'pharmacist', 'benefactor', 'admin'];
+$valid_roles  = ['doctor', 'patient', 'staff', 'pharmacist', 'admin'];
 $selected_role = isset($_GET['add_role']) && in_array($_GET['add_role'], $valid_roles) ? $_GET['add_role'] : 'doctor';
 $edit_user = null;
 
@@ -132,7 +132,6 @@ if (isset($_GET['edit'])) {
                                 <option value="patient"    <?php echo $role_filter === 'patient' ? 'selected' : ''; ?>>Patients</option>
                                 <option value="staff"      <?php echo $role_filter === 'staff' ? 'selected' : ''; ?>>Staff</option>
                                 <option value="pharmacist" <?php echo $role_filter === 'pharmacist' ? 'selected' : ''; ?>>Pharmacists</option>
-                                <option value="benefactor" <?php echo $role_filter === 'benefactor' ? 'selected' : ''; ?>>Benefactors</option>
                                 <option value="admin"      <?php echo $role_filter === 'admin' ? 'selected' : ''; ?>>Admins</option>
                             </select>
                         </div>
