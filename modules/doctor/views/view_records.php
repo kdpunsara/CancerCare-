@@ -142,7 +142,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'doctor') {
                             <div class="avatar" style="width: 56px; height: 56px; font-size: 18px;">KP</div>
                             <div>
                                 <h2 style="margin: 0 0 6px; font-size: 20px;">Kamal Perera <span class="badge" style="background: var(--navy-soft); color: #fff; margin-left: 8px;">Stage III</span></h2>
-                                <p class="table-caption" style="margin: 0;">ID: P-1001 | NIC: 198510201234 | Age: 52 | Male | Blood Group: O+</p>
+                                <p class="table-caption" style="margin: 0;">ID: P-1001 | Age: 52 | Male | Blood Group: O+</p>
                             </div>
                         </div>
                     </div>
@@ -337,10 +337,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'doctor') {
                                         <option>Progressive Disease</option>
                                     </select>
                                 </div>
-                                <div class="form-field">
-                                    <label>Next Scheduled Treatment</label>
-                                    <input type="date" value="2026-07-13">
-                                </div>
+                               
                                 <div class="form-field">
                                     <label>Referrals / Additional Tests Required</label>
                                     <input type="text" placeholder="e.g., Cardiology clearance, MRI Brain">

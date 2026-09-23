@@ -20,11 +20,9 @@ switch ($action) {
     case 'update_profile':
         $email = trim($_POST['email'] ?? '');
         $phone = trim($_POST['phone'] ?? '');
-        $first_name = trim($_POST['first_name'] ?? '');
-        $last_name = trim($_POST['last_name'] ?? '');
         $password = $_POST['password'] ?? '';
 
-        if ($email === '' || $first_name === '' || $last_name === '') {
+        if ($email === '') {
             header("Location: views/doctor_profile.php?error=invalid_profile");
             exit();
         }
@@ -40,10 +38,6 @@ switch ($action) {
                 $stmt_user->bind_param("ssi", $email, $phone, $doctor_id);
             }
             $stmt_user->execute();
-
-            $stmt_doctor = $conn->prepare("UPDATE Doctor SET first_name = ?, last_name = ? WHERE user_id = ?");
-            $stmt_doctor->bind_param("ssi", $first_name, $last_name, $doctor_id);
-            $stmt_doctor->execute();
 
             $conn->commit();
             header("Location: views/doctor_profile.php?msg=profile_updated");

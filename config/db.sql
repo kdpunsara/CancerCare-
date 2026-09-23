@@ -111,6 +111,7 @@ CREATE TABLE Appointment (
     CONSTRAINT fk_appt_patient FOREIGN KEY (patient_user_id) REFERENCES user(user_id) ON DELETE CASCADE,
     CONSTRAINT fk_appt_doctor FOREIGN KEY (doctor_user_id) REFERENCES user(user_id) ON DELETE RESTRICT,
     CONSTRAINT fk_appt_staff FOREIGN KEY (staff_user_id) REFERENCES user(user_id) ON DELETE SET NULL
+<<<<<<< HEAD
 );
 
 -- Patient reminders
@@ -121,6 +122,8 @@ CREATE TABLE Reminder (
     reminder_date DATE NOT NULL,
     reminder_time TIME NULL,
     CONSTRAINT fk_reminder_patient_user FOREIGN KEY (patient_user_id) REFERENCES user(user_id) ON DELETE CASCADE
+=======
+>>>>>>> fa42684 (add some doctor functionalities)
 );
 
 -- Medical Records: Diagnosis & Treatment History (Covers Scope 3.2.3)

@@ -7,6 +7,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'doctor') {
     exit();
 }
 
+
 $doctor_id = $_SESSION['user_id'];
 $stmt_profile = $conn->prepare("SELECT u.username, u.email, u.phone,
                                       d.first_name, d.last_name, d.specialization, d.qualification, d.license_no
@@ -75,11 +76,11 @@ if (!$profile) {
                         </div>
                         <div class="form-field">
                             <label>First Name *</label>
-                            <input type="text" name="first_name" required value="<?php echo htmlspecialchars($profile['first_name']); ?>">
+                            <input type="text" value="<?php echo htmlspecialchars($profile['first_name']); ?>" readonly>
                         </div>
                         <div class="form-field">
                             <label>Last Name *</label>
-                            <input type="text" name="last_name" required value="<?php echo htmlspecialchars($profile['last_name']); ?>">
+                            <input type="text" value="<?php echo htmlspecialchars($profile['last_name']); ?>" readonly>
                         </div>
                         <div class="form-field">
                             <label>Email *</label>

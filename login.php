@@ -555,7 +555,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             type="text"
                             id="login_identifier"
                             name="login_identifier"
-                            placeholder="e.g. 100001, dr_noel, email@hospital.lk"
+                            placeholder="e.g. 100001, dr_hemal, email@hospital.lk"
                             required
                             autocomplete="username"
                         >

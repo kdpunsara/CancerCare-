@@ -151,8 +151,7 @@ function calculateAge($dob) {
                                         <tr>
                                             <td class="med-name">P-<?php echo $pt['patient_user_id']; ?></td>
                                             <td>
-                                                <strong><?php echo htmlspecialchars($pt['first_name'] . ' ' . $pt['last_name']); ?></strong><br>
-                                                <span style="font-size: 12.5px; color: var(--text-muted);">NIC: <?php echo htmlspecialchars($pt['nic']); ?></span>
+                                                <strong><?php echo htmlspecialchars($pt['first_name'] . ' ' . $pt['last_name']); ?></strong>
                                             </td>
                                             <td><?php echo calculateAge($pt['dob']); ?> / <?php echo ucfirst($pt['gender']); ?></td>
                                             <td><?php echo htmlspecialchars($pt['cancer_type']); ?></td>
