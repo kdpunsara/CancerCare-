@@ -9,7 +9,7 @@ require_once 'config/database.php'; // Adjust path if your file is elsewhere
 if (isset($_SESSION['user_id'])) {
     $role = $_SESSION['role'];
     switch ($role) {
-        case 'patient': header("Location: modules/patient/views/dashboard.php"); break;
+        case 'patient': header("Location: modules/patient/views/patient_dashboard.php"); break;
         case 'doctor': header("Location: modules/doctor/views/doctor_dashboard.php"); break;
         case 'staff': header("Location: modules/staff/views/dashboard.php"); break;
         case 'pharmacist': header("Location: modules/pharmacist/views/dashboard.php"); break;
@@ -65,7 +65,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 
                 // Redirect based on role
                 switch ($user['role']) {
-                    case 'patient': header("Location: modules/patient/views/dashboard.php"); break;
+                    case 'patient': header("Location: modules/patient/views/patient_dashboard.php"); break;
                     case 'doctor': header("Location: modules/doctor/views/doctor_dashboard.php"); break;
                     case 'staff': header("Location: modules/staff/views/dashboard.php"); break;
                     case 'pharmacist': header("Location: modules/pharmacist/views/dashboard.php"); break;
@@ -91,6 +91,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login — Cancer Patient Care System</title>
+    <link rel="stylesheet" href="public/css/base.css">
     <style>
         /* ── Design tokens aligned with base.css ── */
         :root {

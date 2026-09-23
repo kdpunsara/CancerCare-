@@ -13,7 +13,7 @@ USE cancer_care_system;
 -- ==========================================
 
 -- Base User Table (Handles login for ALL actors)
-CREATE TABLE User (
+CREATE TABLE user (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
@@ -21,7 +21,7 @@ CREATE TABLE User (
     must_change_password TINYINT(1) NOT NULL DEFAULT 0,
     phone VARCHAR(20),
     role ENUM('patient', 'doctor', 'staff', 'pharmacist', 'benefactor', 'admin') NOT NULL,
-    status ENUM('active', 'inactive', 'suspended') DEFAULT 'active',
+    status ENUM('active', 'inactive', 'suspended') DEFAULT 'active'
     
 );
 
@@ -37,7 +37,7 @@ CREATE TABLE Patient (
     city VARCHAR(100),
     blood_group VARCHAR(5),
     allergies TEXT,
-    CONSTRAINT fk_patient_user FOREIGN KEY (user_id) REFERENCES User(user_id) ON DELETE CASCADE
+    CONSTRAINT fk_patient_user FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE
 );
 
 -- Doctor Profile (Extends User)
@@ -48,7 +48,7 @@ CREATE TABLE Doctor (
     specialization VARCHAR(100),
     qualification VARCHAR(200),
     license_no VARCHAR(50) UNIQUE NOT NULL,
-    CONSTRAINT fk_doctor_user FOREIGN KEY (user_id) REFERENCES User(user_id) ON DELETE CASCADE
+    CONSTRAINT fk_doctor_user FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE
 );
 
 -- Medical Staff Profile (Extends User)
@@ -59,7 +59,7 @@ CREATE TABLE Medical_Staff (
     designation VARCHAR(100),
     department VARCHAR(100),
     employee_id VARCHAR(50) UNIQUE,
-    CONSTRAINT fk_staff_user FOREIGN KEY (user_id) REFERENCES User(user_id) ON DELETE CASCADE
+    CONSTRAINT fk_staff_user FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE
 );
 
 -- Pharmacist Profile (Extends User)
@@ -70,7 +70,7 @@ CREATE TABLE Pharmacist (
     pharmacy_name VARCHAR(150) NOT NULL,
     address TEXT,
     license_no VARCHAR(50) UNIQUE NOT NULL,
-    CONSTRAINT fk_pharmacist_user FOREIGN KEY (user_id) REFERENCES User(user_id) ON DELETE CASCADE
+    CONSTRAINT fk_pharmacist_user FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE
 );
 
 -- Benefactor Profile (Extends User) - Covers Scope 3.2.5
@@ -83,8 +83,8 @@ CREATE TABLE Benefactor (
     address TEXT,
     country VARCHAR(100),
     total_donations DECIMAL(12, 2) DEFAULT 0.00,
-    CONSTRAINT fk_benefactor_user FOREIGN KEY (user_id) REFERENCES User(user_id) ON DELETE CASCADE
-);
+        CONSTRAINT fk_benefactor_user FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE
+    );
 
 -- Admin Profile (Extends User)
 CREATE TABLE Admin (
@@ -92,7 +92,7 @@ CREATE TABLE Admin (
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
     admin_level ENUM('super', 'regular') DEFAULT 'regular',
-    CONSTRAINT fk_admin_user FOREIGN KEY (user_id) REFERENCES User(user_id) ON DELETE CASCADE
+    CONSTRAINT fk_admin_user FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE
 );
 
 -- ==========================================
@@ -108,9 +108,19 @@ CREATE TABLE Appointment (
     appointment_date DATE NOT NULL,
     appointment_time TIME NOT NULL,
     reason TEXT,
-    CONSTRAINT fk_appt_patient FOREIGN KEY (patient_user_id) REFERENCES User(user_id) ON DELETE CASCADE,
-    CONSTRAINT fk_appt_doctor FOREIGN KEY (doctor_user_id) REFERENCES User(user_id) ON DELETE RESTRICT,
-    CONSTRAINT fk_appt_staff FOREIGN KEY (staff_user_id) REFERENCES User(user_id) ON DELETE SET NULL
+    CONSTRAINT fk_appt_patient FOREIGN KEY (patient_user_id) REFERENCES user(user_id) ON DELETE CASCADE,
+    CONSTRAINT fk_appt_doctor FOREIGN KEY (doctor_user_id) REFERENCES user(user_id) ON DELETE RESTRICT,
+    CONSTRAINT fk_appt_staff FOREIGN KEY (staff_user_id) REFERENCES user(user_id) ON DELETE SET NULL
+);
+
+-- Patient reminders
+CREATE TABLE Reminder (
+    reminder_id INT AUTO_INCREMENT PRIMARY KEY,
+    patient_user_id INT NOT NULL,
+    reminder_title VARCHAR(200) NOT NULL,
+    reminder_date DATE NOT NULL,
+    reminder_time TIME NULL,
+    CONSTRAINT fk_reminder_patient_user FOREIGN KEY (patient_user_id) REFERENCES user(user_id) ON DELETE CASCADE
 );
 
 -- Medical Records: Diagnosis & Treatment History (Covers Scope 3.2.3)
@@ -123,8 +133,8 @@ CREATE TABLE MedicalRecord (
     cancer_stage VARCHAR(20),
     treatment_plan TEXT NOT NULL,
     clinical_notes TEXT,
-    CONSTRAINT fk_record_patient FOREIGN KEY (patient_user_id) REFERENCES User(user_id) ON DELETE CASCADE,
-    CONSTRAINT fk_record_doctor FOREIGN KEY (doctor_user_id) REFERENCES User(user_id) ON DELETE RESTRICT
+    CONSTRAINT fk_record_patient FOREIGN KEY (patient_user_id) REFERENCES user(user_id) ON DELETE CASCADE,
+    CONSTRAINT fk_record_doctor FOREIGN KEY (doctor_user_id) REFERENCES user(user_id) ON DELETE RESTRICT
 );
 
 -- Medical Reports: Uploaded Files (Covers Use Case 07)
@@ -137,8 +147,8 @@ CREATE TABLE MedicalReport (
     file_path VARCHAR(500) NOT NULL,
     upload_date DATETIME DEFAULT CURRENT_TIMESTAMP,
     notes TEXT,
-    CONSTRAINT fk_report_patient FOREIGN KEY (patient_user_id) REFERENCES User(user_id) ON DELETE CASCADE,
-    CONSTRAINT fk_report_staff FOREIGN KEY (uploaded_by_user_id) REFERENCES User(user_id) ON DELETE RESTRICT
+    CONSTRAINT fk_report_patient FOREIGN KEY (patient_user_id) REFERENCES user(user_id) ON DELETE CASCADE,
+    CONSTRAINT fk_report_staff FOREIGN KEY (uploaded_by_user_id) REFERENCES user(user_id) ON DELETE RESTRICT
 );
 
 -- Medicine Catalog (Covers Scope 3.2.4)
@@ -147,6 +157,8 @@ CREATE TABLE Medicine (
     medicine_name VARCHAR(200) NOT NULL,
     generic_name VARCHAR(200),
     category VARCHAR(100),
+    stock_quantity INT NOT NULL DEFAULT 0,
+    unit_price DECIMAL(10, 2) DEFAULT 0.00,
     manufacturer VARCHAR(150)
 );
 
@@ -158,8 +170,8 @@ CREATE TABLE Prescription (
     prescription_date DATE NOT NULL,
     status ENUM('active', 'completed', 'cancelled') DEFAULT 'active',
     diagnosis_notes TEXT,
-    CONSTRAINT fk_rx_patient FOREIGN KEY (patient_user_id) REFERENCES User(user_id) ON DELETE CASCADE,
-    CONSTRAINT fk_rx_doctor FOREIGN KEY (doctor_user_id) REFERENCES User(user_id) ON DELETE RESTRICT
+    CONSTRAINT fk_rx_patient FOREIGN KEY (patient_user_id) REFERENCES user(user_id) ON DELETE CASCADE,
+    CONSTRAINT fk_rx_doctor FOREIGN KEY (doctor_user_id) REFERENCES user(user_id) ON DELETE RESTRICT
 );
 
 -- Prescription Items (Junction Table for Many-to-Many)
@@ -210,8 +222,8 @@ CREATE TABLE MealPlan (
     menu_description TEXT NOT NULL,
     dietary_restrictions TEXT,
     nutritional_notes TEXT,
-    CONSTRAINT fk_meal_patient FOREIGN KEY (patient_user_id) REFERENCES User(user_id) ON DELETE CASCADE,
-    CONSTRAINT fk_meal_doctor FOREIGN KEY (doctor_user_id) REFERENCES User(user_id) ON DELETE RESTRICT,
+    CONSTRAINT fk_meal_patient FOREIGN KEY (patient_user_id) REFERENCES user(user_id) ON DELETE CASCADE,
+    CONSTRAINT fk_meal_doctor FOREIGN KEY (doctor_user_id) REFERENCES user(user_id) ON DELETE RESTRICT,
     CONSTRAINT fk_meal_template FOREIGN KEY (template_id) REFERENCES MealPlanTemplate(template_id) ON DELETE SET NULL
 );
 
@@ -253,8 +265,8 @@ CREATE TABLE Donation (
     status ENUM('pending', 'processing', 'completed', 'rejected') DEFAULT 'pending',
     donation_date DATE NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_donation_benefactor FOREIGN KEY (benefactor_user_id) REFERENCES User(user_id) ON DELETE CASCADE,
-    CONSTRAINT fk_donation_patient FOREIGN KEY (patient_user_id) REFERENCES User(user_id) ON DELETE SET NULL
+    CONSTRAINT fk_donation_benefactor FOREIGN KEY (benefactor_user_id) REFERENCES user(user_id) ON DELETE CASCADE,
+    CONSTRAINT fk_donation_patient FOREIGN KEY (patient_user_id) REFERENCES user(user_id) ON DELETE SET NULL
 );
 
 -- System Logs (Admin Monitoring)
@@ -267,7 +279,7 @@ CREATE TABLE SystemLog (
     action_description TEXT,
     ip_address VARCHAR(50),
     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_log_user FOREIGN KEY (user_id) REFERENCES User(user_id) ON DELETE SET NULL
+    CONSTRAINT fk_log_user FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE SET NULL
 );
 
 -- ==========================================

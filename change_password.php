@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($stmt->execute()) {
             $role = $_SESSION['role'];
             switch ($role) {
-                case 'patient': $destination = 'modules/patient/views/dashboard.php'; break;
+                case 'patient': $destination = 'modules/patient/views/patient_dashboard.php'; break;
                 case 'doctor': $destination = 'modules/doctor/views/doctor_dashboard.php'; break;
                 case 'staff': $destination = 'modules/staff/views/dashboard.php'; break;
                 case 'pharmacist': $destination = 'modules/pharmacist/views/dashboard.php'; break;
@@ -50,6 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Set New Password - CancerCare</title>
+    <link rel="stylesheet" href="public/css/base.css">
     <style>
         :root {
             --navy: #101a33;
