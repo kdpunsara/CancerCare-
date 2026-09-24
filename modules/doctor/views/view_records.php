@@ -3,8 +3,89 @@ session_start();
 require_once __DIR__ . '/../../../config/database.php';
 
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'doctor') {
-    header('Location: ../../../login.php');
+    header("Location: ../../../index.php");
     exit();
+}
+
+$doctor_id = $_SESSION['user_id'];
+
+// ---- Determine which view to show ----
+$view = 'list'; // default
+$selected_patient = null;
+$records = [];
+$current_record = null;
+$record_to_update = null;
+
+if (isset($_GET['patient'])) {
+    $patient_id = intval($_GET['patient']);
+    $view = 'details';
+
+    // Fetch patient info
+    $stmt_p = $conn->prepare("SELECT p.user_id, p.first_name, p.last_name, p.dob, p.gender, p.blood_group, p.nic
+                              FROM Patient p WHERE p.user_id = ?");
+    $stmt_p->bind_param("i", $patient_id);
+    $stmt_p->execute();
+    $selected_patient = $stmt_p->get_result()->fetch_assoc();
+
+    // Fetch all medical records for this patient (latest first)
+    $stmt_r = $conn->prepare("SELECT mr.*, d.first_name AS doc_first, d.last_name AS doc_last
+                              FROM MedicalRecord mr
+                              JOIN Doctor d ON d.user_id = mr.doctor_user_id
+                              WHERE mr.patient_user_id = ?
+                              ORDER BY mr.record_date DESC, mr.record_id DESC");
+    $stmt_r->bind_param("i", $patient_id);
+    $stmt_r->execute();
+    $records = $stmt_r->get_result()->fetch_all(MYSQLI_ASSOC);
+
+    if (!empty($records)) {
+        $current_record = $records[0]; // Latest record
+    }
+
+    // If updating a specific record
+    if (isset($_GET['record'])) {
+        $view = 'update';
+        $record_id = intval($_GET['record']);
+        foreach ($records as $r) {
+            if ($r['record_id'] === $record_id) {
+                $record_to_update = $r;
+                break;
+            }
+        }
+        // Fallback to latest if record not found
+        if (!$record_to_update && !empty($records)) {
+            $record_to_update = $current_record;
+        }
+    }
+}
+
+// ---- Patient Search (GET) ----
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$all_patients = [];
+if ($view === 'list') {
+    $sql_p = "SELECT p.user_id, p.first_name, p.last_name,
+                     mr.cancer_stage, mr.record_date AS last_updated
+              FROM Patient p
+              LEFT JOIN MedicalRecord mr ON mr.record_id = (
+                  SELECT MAX(m2.record_id) FROM MedicalRecord m2
+                  WHERE m2.patient_user_id = p.user_id
+                    AND m2.doctor_user_id = ?
+              )
+              WHERE p.user_id IN (SELECT DISTINCT patient_user_id FROM MedicalRecord WHERE doctor_user_id = ?)";
+    $stmt_p = $conn->prepare($sql_p);
+    $stmt_p->bind_param("ii", $doctor_id, $doctor_id);
+    $stmt_p->execute();
+    $all_patients = $stmt_p->get_result()->fetch_all(MYSQLI_ASSOC);
+
+    if ($search !== '') {
+        $all_patients = array_values(array_filter($all_patients, function ($p) use ($search) {
+            $hay = strtolower($p['first_name'] . ' ' . $p['last_name'] . ' ' . $p['user_id']);
+            return strpos($hay, strtolower($search)) !== false;
+        }));
+    }
+}
+
+function calculateAge($dob) {
+    return date_diff(date_create($dob), date_create('today'))->y;
 }
 ?>
 <!DOCTYPE html>
@@ -14,41 +95,17 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'doctor') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>View Records - Cancer Care</title>
     <link rel="stylesheet" href="../../../public/css/base.css">
-    <style>
-        /* Basic utility to handle view switching */
-        .view-section {
-            display: none;
-        }
-        .view-section.active {
-            display: block;
-        }
-        .search-bar-container {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-        .search-bar-container input {
-            flex-grow: 1;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-    </style>
 </head>
 <body>
     <div class="app">
-        <?php
-        $current_page = 'records';
-        require_once __DIR__ . '/../../../includes/doctor_sidebar.php';
-        ?>
+        <?php $current_page = 'records'; require_once __DIR__ . '/../../../includes/doctor_sidebar.php'; ?>
 
-        <!-- Main Content -->
         <main class="main">
 
-            <!-- ========================================== -->
-            <!-- VIEW 1: PATIENT SEARCH & LIST              -->
-            <!-- ========================================== -->
-            <div id="view-patient-list" class="view-section active">
+            <?php if ($view === 'list'): ?>
+                <!-- ========================================== -->
+                <!-- VIEW 1: PATIENT SEARCH & LIST              -->
+                <!-- ========================================== -->
                 <header class="topbar">
                     <div class="topbar-left">
                         <div>
@@ -57,19 +114,33 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'doctor') {
                         </div>
                     </div>
                     <div class="topbar-actions">
-                        <button class="signout-btn">Sign Out</button>
+                        <a href="../../../index.php?logout=1" class="signout-btn">Sign Out</a>
                     </div>
                 </header>
 
                 <section class="content">
-                    <div class="card form-card">
-                        <div class="search-bar-container">
-                            <input type="text" placeholder="Search patients by Name, ID (e.g., P-1001), or NIC...">
-                            <button class="btn-primary">Search</button>
+                    <?php if (isset($_GET['msg']) && $_GET['msg'] === 'record_saved'): ?>
+                        <div class="card panel" style="border-left: 4px solid var(--teal);">
+                            <p class="panel-note" style="color: var(--teal);">Diagnosis updated successfully.</p>
                         </div>
+                    <?php endif; ?>
+
+                    <div class="card wide-card">
+                        <form method="GET" action="view_records.php" class="form-grid" style="grid-template-columns: minmax(0, 1fr) auto; align-items: end;">
+                            <div class="form-field">
+                                <label>Search Patients</label>
+                                <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search by name or Patient ID...">
+                            </div>
+                            <div class="form-field" style="align-items: flex-end;">
+                                <button type="submit" class="btn-primary">Search</button>
+                            </div>
+                        </form>
                     </div>
 
-                    <div class="card list-card wide-card">
+                    <div class="card wide-card">
+                        <div class="list-card-header">
+                            <h3>My Patients (<?php echo count($all_patients); ?>)</h3>
+                        </div>
                         <div class="table-wrap">
                             <table class="data-table">
                                 <thead>
@@ -82,45 +153,31 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'doctor') {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td><strong>P-1001</strong></td>
-                                        <td>Kamal Perera</td>
-                                        <td><span class="badge" style="background: var(--navy-soft); color: #fff;">Stage III</span></td>
-                                        <td>Jun 15, 2026</td>
-                                        <td><button class="btn-primary" onclick="showView('view-patient-details')" style="padding: 6px 12px; font-size: 13px;">View Details</button></td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>P-1002</strong></td>
-                                        <td>Nimali Silva</td>
-                                        <td><span class="badge" style="background: var(--navy-soft); color: #fff;">Stage II</span></td>
-                                        <td>Jun 10, 2026</td>
-                                        <td><button class="btn-primary" onclick="showView('view-patient-details')" style="padding: 6px 12px; font-size: 13px;">View Details</button></td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>P-1003</strong></td>
-                                        <td>Sunil Bandara</td>
-                                        <td><span class="badge" style="background: var(--navy-soft); color: #fff;">Stage IV</span></td>
-                                        <td>May 28, 2026</td>
-                                        <td><button class="btn-primary" onclick="showView('view-patient-details')" style="padding: 6px 12px; font-size: 13px;">View Details</button></td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>P-1004</strong></td>
-                                        <td>Chamari Jayawardena</td>
-                                        <td><span class="badge" style="background: var(--navy-soft); color: #fff;">Stage I</span></td>
-                                        <td>May 15, 2026</td>
-                                        <td><button class="btn-primary" onclick="showView('view-patient-details')" style="padding: 6px 12px; font-size: 13px;">View Details</button></td>
-                                    </tr>
+                                    <?php if (empty($all_patients)): ?>
+                                        <tr>
+                                            <td colspan="5" style="text-align: center; padding: 20px; color: var(--text-muted);">No patients found.</td>
+                                        </tr>
+                                    <?php else: ?>
+                                        <?php foreach ($all_patients as $p): ?>
+                                            <tr>
+                                                <td class="med-name">P-<?php echo $p['user_id']; ?></td>
+                                                <td><?php echo htmlspecialchars($p['first_name'] . ' ' . $p['last_name']); ?></td>
+                                                <td><span class="badge badge-active"><?php echo htmlspecialchars($p['cancer_stage'] ?: 'N/A'); ?></span></td>
+                                                <td><?php echo $p['last_updated'] ? date('M d, Y', strtotime($p['last_updated'])) : '—'; ?></td>
+                                                <td><a href="view_records.php?patient=<?php echo $p['user_id']; ?>" class="link-action">View Details</a></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
                                 </tbody>
                             </table>
                         </div>
                     </div>
                 </section>
-            </div>
 
-            <!-- ========================================== -->
-            <!-- VIEW 2: PATIENT DETAILS (View Records)     -->
-            <!-- ========================================== -->
-            <div id="view-patient-details" class="view-section">
+            <?php elseif ($view === 'details' && $selected_patient): ?>
+                <!-- ========================================== -->
+                <!-- VIEW 2: PATIENT DETAILS                    -->
+                <!-- ========================================== -->
                 <header class="topbar">
                     <div class="topbar-left">
                         <div>
@@ -129,9 +186,11 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'doctor') {
                         </div>
                     </div>
                     <div class="topbar-actions">
-                        <button class="btn-secondary" onclick="showView('view-patient-list')" style="margin-right: 12px;">Back to List</button>
-                        <button class="btn-primary" onclick="showView('view-update-diagnosis')" style="margin-right: 12px;">Update Diagnosis</button>
-                        <button class="signout-btn">Sign Out</button>
+                        <a href="view_records.php" class="btn-secondary" style="margin-right: 12px;">Back to List</a>
+                        <?php if ($current_record): ?>
+                            <a href="view_records.php?patient=<?php echo $selected_patient['user_id']; ?>&record=<?php echo $current_record['record_id']; ?>" class="btn-primary" style="margin-right: 12px;">Update Diagnosis</a>
+                        <?php endif; ?>
+                        <a href="../../../index.php?logout=1" class="signout-btn">Sign Out</a>
                     </div>
                 </header>
 
@@ -139,35 +198,48 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'doctor') {
                     <!-- Patient Header -->
                     <div class="card panel">
                         <div style="display: flex; gap: 20px; align-items: center;">
-                            <div class="avatar" style="width: 56px; height: 56px; font-size: 18px;">KP</div>
+                            <div class="avatar" style="width: 56px; height: 56px; font-size: 18px;">
+                                <?php echo strtoupper(substr($selected_patient['first_name'], 0, 1) . substr($selected_patient['last_name'], 0, 1)); ?>
+                            </div>
                             <div>
-                                <h2 style="margin: 0 0 6px; font-size: 20px;">Kamal Perera <span class="badge" style="background: var(--navy-soft); color: #fff; margin-left: 8px;">Stage III</span></h2>
-                                <p class="table-caption" style="margin: 0;">ID: P-1001 | Age: 52 | Male | Blood Group: O+</p>
+                                <h2 style="margin: 0 0 6px; font-size: 20px;">
+                                    <?php echo htmlspecialchars($selected_patient['first_name'] . ' ' . $selected_patient['last_name']); ?>
+                                    <?php if ($current_record): ?>
+                                        <span class="badge badge-active" style="margin-left: 8px;"><?php echo htmlspecialchars($current_record['cancer_stage']); ?></span>
+                                    <?php endif; ?>
+                                </h2>
+                                <p class="panel-note">
+                                    ID: P-<?php echo $selected_patient['user_id']; ?> |
+                                    Age: <?php echo calculateAge($selected_patient['dob']); ?> |
+                                    <?php echo ucfirst($selected_patient['gender']); ?> |
+                                    Blood Group: <?php echo htmlspecialchars($selected_patient['blood_group'] ?: 'N/A'); ?>
+                                </p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Current Status Summary -->
-                    <div class="card form-card">
-                        <h3 class="form-title">Current Diagnosis & Treatment Plan</h3>
-                        <p class="form-subtitle">Latest active plan outlined for this patient.</p>
-                        
-                        <div class="form-grid">
-                            <div class="form-field">
-                                <label>Primary Diagnosis</label>
-                                <textarea readonly rows="3" style="background: var(--bg); pointer-events:none;">Colorectal Adenocarcinoma (Stage III). Confirmed via biopsy on Feb 05, 2026.</textarea>
-                            </div>
-                            <div class="form-field">
-                                <label>Current Treatment Plan</label>
-                                <textarea readonly rows="3" style="background: var(--bg); pointer-events:none;">Neoadjuvant Chemotherapy (FOLFOX regimen) for 8 cycles. Currently on Cycle 4. Next cycle scheduled for July 13, 2026.</textarea>
+                    <!-- Current Diagnosis -->
+                    <?php if ($current_record): ?>
+                        <div class="card form-card">
+                            <h3 class="form-title">Current Diagnosis &amp; Treatment Plan</h3>
+                            <p class="form-subtitle">Latest active plan outlined for this patient.</p>
+                            <div class="form-grid">
+                                <div class="form-field form-field-wide">
+                                    <label>Primary Diagnosis</label>
+                                    <textarea readonly rows="3" style="background: var(--bg); pointer-events: none;"><?php echo htmlspecialchars($current_record['diagnosis']); ?></textarea>
+                                </div>
+                                <div class="form-field form-field-wide">
+                                    <label>Current Treatment Plan</label>
+                                    <textarea readonly rows="3" style="background: var(--bg); pointer-events: none;"><?php echo htmlspecialchars($current_record['treatment_plan']); ?></textarea>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    <?php endif; ?>
 
-                    <!-- PREVIOUS DIAGNOSIS RECORDS -->
-                    <div class="card list-card wide-card">
+                    <!-- Previous Records History -->
+                    <div class="card wide-card">
                         <div class="list-card-header">
-                            <h3>Previous Diagnosis & Treatment History</h3>
+                            <h3>Previous Diagnosis &amp; Treatment History</h3>
                         </div>
                         <div class="table-wrap">
                             <table class="data-table">
@@ -182,203 +254,144 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'doctor') {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td><strong>Jun 15, 2026</strong></td>
-                                        <td>Dr. N. Fernando</td>
-                                        <td style="max-width: 250px; white-space: normal; line-height:1.4;">Post-cycle 4 evaluation. 15% reduction in tumor mass. Mild neuropathy noted.</td>
-                                        <td><span class="badge" style="background: var(--navy-soft); color: #fff;">Stage III</span></td>
-                                        <td style="max-width: 200px; white-space: normal; line-height:1.4;">Continue FOLFOX. Monitor neuropathy.</td>
-                                        <td><button class="btn-secondary" style="padding: 6px 12px; font-size: 12px;">View Details</button></td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>May 18, 2026</strong></td>
-                                        <td>Dr. N. Fernando</td>
-                                        <td style="max-width: 250px; white-space: normal; line-height:1.4;">CT Scan Review. Stable disease progression. Blood counts normal.</td>
-                                        <td><span class="badge" style="background: var(--navy-soft); color: #fff;">Stage III</span></td>
-                                        <td style="max-width: 200px; white-space: normal; line-height:1.4;">Proceed with Cycle 4 as planned.</td>
-                                        <td><button class="btn-secondary" style="padding: 6px 12px; font-size: 12px;">View Details</button></td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Mar 10, 2026</strong></td>
-                                        <td>Dr. N. Fernando</td>
-                                        <td style="max-width: 250px; white-space: normal; line-height:1.4;">Adverse reaction: Neutropenia (low WBC). Treatment delayed.</td>
-                                        <td><span class="badge" style="background: var(--navy-soft); color: #fff;">Stage III</span></td>
-                                        <td style="max-width: 200px; white-space: normal; line-height:1.4;">Administered G-CSF. Delayed Cycle 3 by 1 week.</td>
-                                        <td><button class="btn-secondary" style="padding: 6px 12px; font-size: 12px;">View Details</button></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- Uploaded Medical Reports -->
-                    <div class="card list-card wide-card">
-                        <div class="list-card-header">
-                            <h3>Uploaded Medical Reports</h3>
-                        </div>
-                        <div class="table-wrap">
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Date Uploaded</th>
-                                        <th>Report Type</th>
-                                        <th>Uploaded By</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td><strong>Jun 15, 2026</strong></td>
-                                        <td class="med-name">Blood Test Results (CBC)</td>
-                                        <td>Nurse Amali (Staff)</td>
-                                        <td><button class="btn-secondary" style="padding: 6px 12px; font-size: 12px;">View File</button></td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>May 18, 2026</strong></td>
-                                        <td class="med-name">CT Scan Report (Abdomen)</td>
-                                        <td>Nurse Amali (Staff)</td>
-                                        <td><button class="btn-secondary" style="padding: 6px 12px; font-size: 12px;">View File</button></td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Feb 05, 2026</strong></td>
-                                        <td class="med-name">Biopsy & Histopathology Report</td>
-                                        <td>Nurse Amali (Staff)</td>
-                                        <td><button class="btn-secondary" style="padding: 6px 12px; font-size: 12px;">View File</button></td>
-                                    </tr>
+                                    <?php if (empty($records)): ?>
+                                        <tr>
+                                            <td colspan="6" style="text-align: center; padding: 20px; color: var(--text-muted);">No records found.</td>
+                                        </tr>
+                                    <?php else: ?>
+                                        <?php foreach ($records as $r): ?>
+                                            <tr>
+                                                <td><strong><?php echo date('M d, Y', strtotime($r['record_date'])); ?></strong></td>
+                                                <td>Dr. <?php echo htmlspecialchars($r['doc_first'] . ' ' . $r['doc_last']); ?></td>
+                                                <td style="max-width: 250px; white-space: normal; line-height: 1.4;"><?php echo htmlspecialchars($r['clinical_notes'] ?: $r['diagnosis']); ?></td>
+                                                <td><span class="badge badge-active"><?php echo htmlspecialchars($r['cancer_stage']); ?></span></td>
+                                                <td style="max-width: 200px; white-space: normal; line-height: 1.4;"><?php echo htmlspecialchars($r['treatment_plan']); ?></td>
+                                                <td><a href="view_records.php?patient=<?php echo $selected_patient['user_id']; ?>&record=<?php echo $r['record_id']; ?>" class="link-action">View / Edit</a></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
                                 </tbody>
                             </table>
                         </div>
                     </div>
                 </section>
-            </div>
 
-            <!-- ========================================== -->
-            <!-- VIEW 3: UPDATE DIAGNOSIS                   -->
-            <!-- ========================================== -->
-            <div id="view-update-diagnosis" class="view-section">
+            <?php elseif ($view === 'update' && $record_to_update && $selected_patient): ?>
+                <!-- ========================================== -->
+                <!-- VIEW 3: UPDATE DIAGNOSIS                   -->
+                <!-- ========================================== -->
                 <header class="topbar">
                     <div class="topbar-left">
                         <div>
-                            <h2>Update Diagnosis & Treatment</h2>
+                            <h2>Update Diagnosis &amp; Treatment</h2>
                             <p class="date">Update patient medical status, diagnosis reports, and treatment history</p>
                         </div>
                     </div>
                     <div class="topbar-actions">
-                        <button class="signout-btn">Sign Out</button>
+                        <a href="view_records.php?patient=<?php echo $selected_patient['user_id']; ?>" class="btn-secondary" style="margin-right: 12px;">Back to Details</a>
+                        <a href="../../../index.php?logout=1" class="signout-btn">Sign Out</a>
                     </div>
                 </header>
 
                 <section class="content">
-                    
-                    <!-- Patient Context (Readonly since patient is already selected) -->
+                    <?php if (isset($_GET['error'])): ?>
+                        <div class="card panel" style="border-left: 4px solid var(--red);">
+                            <p class="panel-note" style="color: var(--red);">
+                                <?php echo $_GET['error'] === 'invalid_record' ? 'Could not save: please fill all required fields.' : 'Database error while saving the record.'; ?>
+                            </p>
+                        </div>
+                    <?php endif; ?>
+
+                    <!-- Patient Context -->
                     <div class="card form-card">
                         <div class="form-grid" style="align-items: center;">
                             <div class="form-field">
                                 <label>Selected Patient</label>
-                                <input type="text" value="P-1001 - Kamal Perera" readonly style="background: var(--bg); pointer-events: none;">
+                                <input type="text" value="P-<?php echo $selected_patient['user_id']; ?> - <?php echo htmlspecialchars($selected_patient['first_name'] . ' ' . $selected_patient['last_name']); ?>" readonly style="background: var(--bg); pointer-events: none;">
                             </div>
                             <div style="display: flex; gap: 24px; margin-top: 10px;">
                                 <div>
-                                    <span class="form-section-label" style="display:block; margin:0 0 6px 0;">Current Stage</span>
-                                    <span class="badge" style="background: var(--navy-soft); color: #fff;">Stage III</span>
+                                    <span class="form-section-label" style="display: block; margin: 0 0 6px 0;">Current Stage</span>
+                                    <span class="badge badge-active"><?php echo htmlspecialchars($record_to_update['cancer_stage']); ?></span>
                                 </div>
                                 <div>
-                                    <span class="form-section-label" style="display:block; margin:0 0 6px 0;">Last Updated</span>
-                                    <div style="font-weight: 600; font-size: 13.5px;">Jun 15, 2026</div>
+                                    <span class="form-section-label" style="display: block; margin: 0 0 6px 0;">Last Updated</span>
+                                    <div style="font-weight: 600; font-size: 13.5px;"><?php echo date('M d, Y', strtotime($record_to_update['record_date'])); ?></div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <form onsubmit="event.preventDefault(); showView('view-patient-details'); alert('Updates saved successfully!');">
+                    <form method="POST" action="../doctor_actions.php">
+                        <input type="hidden" name="action" value="update_diagnosis">
+                        <input type="hidden" name="patient_user_id" value="<?php echo $selected_patient['user_id']; ?>">
+                        <input type="hidden" name="record_id" value="<?php echo $record_to_update['record_id']; ?>">
+
                         <!-- Section 1: Update Diagnosis -->
                         <div class="card form-card">
                             <h3 class="form-title">Update Diagnosis Report</h3>
                             <p class="form-subtitle">Record clinical observations and confirm staging details.</p>
-                            
                             <div class="form-grid">
                                 <div class="form-field">
-                                    <label>Cancer Type / Primary Diagnosis <span style="color:var(--red);">*</span></label>
-                                    <input type="text" value="Colorectal Adenocarcinoma">
+                                    <label>Cancer Type / Primary Diagnosis *</label>
+                                    <input type="text" name="diagnosis" value="<?php echo htmlspecialchars($record_to_update['diagnosis']); ?>" required>
                                 </div>
                                 <div class="form-field">
-                                    <label>Cancer Stage <span style="color:var(--red);">*</span></label>
-                                    <select>
-                                        <option>Stage I</option>
-                                        <option>Stage II</option>
-                                        <option selected>Stage III</option>
-                                        <option>Stage IV</option>
-                                        <option>In Remission</option>
+                                    <label>Cancer Stage *</label>
+                                    <select name="cancer_stage" required>
+                                        <option value="Stage I"        <?php echo $record_to_update['cancer_stage'] === 'Stage I' ? 'selected' : ''; ?>>Stage I</option>
+                                        <option value="Stage II"       <?php echo $record_to_update['cancer_stage'] === 'Stage II' ? 'selected' : ''; ?>>Stage II</option>
+                                        <option value="Stage III"      <?php echo $record_to_update['cancer_stage'] === 'Stage III' ? 'selected' : ''; ?>>Stage III</option>
+                                        <option value="Stage IV"       <?php echo $record_to_update['cancer_stage'] === 'Stage IV' ? 'selected' : ''; ?>>Stage IV</option>
+                                        <option value="In Remission"   <?php echo $record_to_update['cancer_stage'] === 'In Remission' ? 'selected' : ''; ?>>In Remission</option>
                                     </select>
                                 </div>
                                 <div class="form-field form-field-wide">
-                                    <label>Clinical Findings & Diagnosis Notes <span style="color:var(--red);">*</span></label>
-                                    <textarea rows="4" placeholder="Enter detailed clinical observations, biopsy results, or scan interpretations...">Post-cycle 4 evaluation. Patient is responding well to FOLFOX regimen. Mild peripheral neuropathy noted. CT scan shows 15% reduction in primary tumor mass. No new metastases detected.</textarea>
+                                    <label>Clinical Findings &amp; Diagnosis Notes *</label>
+                                    <textarea name="clinical_notes" rows="4" required placeholder="Enter detailed clinical observations, biopsy results, or scan interpretations..."><?php echo htmlspecialchars($record_to_update['clinical_notes']); ?></textarea>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Section 2: Maintain Treatment History -->
+                        <!-- Section 2: Treatment History -->
                         <div class="card form-card">
-                            <h3 class="form-title">Update Treatment History & Plan</h3>
+                            <h3 class="form-title">Update Treatment History &amp; Plan</h3>
                             <p class="form-subtitle">Record current treatment response and establish the path forward.</p>
-                            
                             <div class="form-grid">
-                                <div class="form-field">
+                                <div class="form-field form-field-wide">
                                     <label>Current Treatment Protocol</label>
-                                    <input type="text" value="FOLFOX Chemotherapy (Cycle 4 of 8)">
-                                </div>
-                                <div class="form-field">
-                                    <label>Treatment Response</label>
-                                    <select>
-                                        <option>Excellent Response</option>
-                                        <option selected>Partial Response</option>
-                                        <option>Stable Disease</option>
-                                        <option>Progressive Disease</option>
-                                    </select>
-                                </div>
-                               
-                                <div class="form-field">
-                                    <label>Referrals / Additional Tests Required</label>
-                                    <input type="text" placeholder="e.g., Cardiology clearance, MRI Brain">
+                                    <input type="text" name="treatment_plan" value="<?php echo htmlspecialchars($record_to_update['treatment_plan']); ?>" placeholder="e.g. FOLFOX Chemotherapy (Cycle 4 of 8)">
                                 </div>
                                 <div class="form-field form-field-wide">
-                                    <label>Future Treatment Plan & Next Steps</label>
-                                    <textarea rows="3" placeholder="Outline the next phase of treatment...">Continue FOLFOX for 4 more cycles. Monitor neuropathy. If stable, proceed to surgical resection evaluation in September. Prescribe Gabapentin for nerve pain management.</textarea>
+                                    <label>Future Treatment Plan &amp; Next Steps</label>
+                                    <textarea name="future_treatment_plan" rows="3" placeholder="Outline the next phase of treatment..."><?php echo htmlspecialchars($record_to_update['future_treatment_plan']); ?></textarea>
                                 </div>
                             </div>
 
-                            <!-- Action Buttons -->
                             <div class="form-actions">
-                                <button type="button" class="btn-secondary" onclick="showView('view-patient-details')">Cancel</button>
+                                <a href="view_records.php?patient=<?php echo $selected_patient['user_id']; ?>" class="btn-secondary">Cancel</a>
                                 <button type="submit" class="btn-primary">Save Diagnosis Updates</button>
                             </div>
                         </div>
                     </form>
                 </section>
-            </div>
+
+            <?php else: ?>
+                <!-- Fallback if patient not found -->
+                <header class="topbar">
+                    <div class="topbar-left">
+                        <div>
+                            <h2>Patient Not Found</h2>
+                            <p class="date">The requested patient record could not be located.</p>
+                        </div>
+                    </div>
+                    <div class="topbar-actions">
+                        <a href="view_records.php" class="btn-secondary">Back to List</a>
+                    </div>
+                </header>
+            <?php endif; ?>
 
         </main>
     </div>
-
-    <!-- JavaScript to handle View Switching -->
-    <script>
-        function showView(viewId) {
-            // Hide all views
-            const views = document.querySelectorAll('.view-section');
-            views.forEach(view => {
-                view.classList.remove('active');
-            });
-            
-            // Show the selected view
-            const activeView = document.getElementById(viewId);
-            if(activeView) {
-                activeView.classList.add('active');
-            }
-            
-            // Scroll to top when switching views for better UX
-            window.scrollTo(0, 0);
-        }
-    </script>
 </body>
 </html>

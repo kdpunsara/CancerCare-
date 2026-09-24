@@ -56,6 +56,7 @@ $modal_open   = isset($_GET['add']);
 $valid_roles  = ['doctor', 'patient', 'staff', 'pharmacist', 'admin'];
 $selected_role = isset($_GET['add_role']) && in_array($_GET['add_role'], $valid_roles) ? $_GET['add_role'] : 'doctor';
 $edit_user = null;
+$doctors = $conn->query("SELECT user_id, first_name, last_name, specialization FROM Doctor ORDER BY first_name, last_name")->fetch_all(MYSQLI_ASSOC);
 
 if (isset($_GET['edit'])) {
     $edit_id = intval($_GET['edit']);
@@ -63,6 +64,8 @@ if (isset($_GET['edit'])) {
                                         COALESCE(p.first_name, d.first_name, ms.first_name, ph.first_name, b.first_name, a.first_name) AS first_name,
                                         COALESCE(p.last_name, d.last_name, ms.last_name, ph.last_name, b.last_name, a.last_name) AS last_name,
                                         p.nic, p.dob, p.gender, p.address AS patient_address, p.city, p.blood_group, p.allergies,
+                                        p.age, p.emergency_contact, p.cancer_type, p.stage, p.assigned_doctor,
+                                        p.treatment_plan, p.status AS patient_status,
                                         d.specialization, d.qualification, d.license_no AS doctor_license,
                                         ms.designation, ms.department, ms.employee_id,
                                         ph.pharmacy_name, ph.address AS pharmacist_address, ph.license_no AS pharmacist_license,
@@ -310,6 +313,46 @@ if (isset($_GET['edit'])) {
                             <label>Allergies</label>
                             <input type="text" name="allergies" placeholder="e.g. Penicillin, Peanuts">
                         </div>
+                        <div class="form-field">
+                            <label>Age</label>
+                            <input type="number" name="age" min="0" max="150">
+                        </div>
+                        <div class="form-field">
+                            <label>Emergency Contact</label>
+                            <input type="text" name="emergency_contact">
+                        </div>
+                        <div class="form-field">
+                            <label>Cancer Type</label>
+                            <input type="text" name="cancer_type">
+                        </div>
+                        <div class="form-field">
+                            <label>Stage</label>
+                            <input type="text" name="stage" placeholder="e.g. Stage II">
+                        </div>
+                        <div class="form-field">
+                            <label>Assigned Doctor</label>
+                            <select name="assigned_doctor">
+                                <option value="">Select doctor</option>
+                                <?php foreach ($doctors as $doctor): ?>
+                                    <?php $doctor_name = trim($doctor['first_name'] . ' ' . $doctor['last_name']); ?>
+                                    <option value="<?php echo htmlspecialchars($doctor_name); ?>">
+                                        <?php echo htmlspecialchars($doctor_name . ($doctor['specialization'] ? ' - ' . $doctor['specialization'] : '')); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="form-field form-field-wide">
+                            <label>Treatment Plan</label>
+                            <input type="text" name="treatment_plan">
+                        </div>
+                        <div class="form-field">
+                            <label>Patient Status</label>
+                            <select name="patient_status">
+                                <option value="active">Active</option>
+                                <option value="scheduled">Scheduled</option>
+                                <option value="stable">Stable</option>
+                            </select>
+                        </div>
 
                     <!-- STAFF SPECIFIC -->
                     <?php elseif ($selected_role === 'staff'): ?>
@@ -479,6 +522,52 @@ if (isset($_GET['edit'])) {
                             <div class="form-field form-field-wide">
                                 <label>Allergies</label>
                                 <input type="text" name="allergies" value="<?php echo htmlspecialchars($edit_user['allergies'] ?? ''); ?>">
+                            </div>
+                            <div class="form-field">
+                                <label>Age</label>
+                                <input type="number" name="age" min="0" max="150" value="<?php echo htmlspecialchars($edit_user['age'] ?? ''); ?>">
+                            </div>
+                            <div class="form-field">
+                                <label>Emergency Contact</label>
+                                <input type="text" name="emergency_contact" value="<?php echo htmlspecialchars($edit_user['emergency_contact'] ?? ''); ?>">
+                            </div>
+                            <div class="form-field">
+                                <label>Cancer Type</label>
+                                <input type="text" name="cancer_type" value="<?php echo htmlspecialchars($edit_user['cancer_type'] ?? ''); ?>">
+                            </div>
+                            <div class="form-field">
+                                <label>Stage</label>
+                                <input type="text" name="stage" value="<?php echo htmlspecialchars($edit_user['stage'] ?? ''); ?>">
+                            </div>
+                            <div class="form-field">
+                                <label>Assigned Doctor</label>
+                                <select name="assigned_doctor">
+                                    <option value="">Select doctor</option>
+                                    <?php $saved_doctor = $edit_user['assigned_doctor'] ?? ''; ?>
+                                    <?php $doctor_exists = false; ?>
+                                    <?php foreach ($doctors as $doctor): ?>
+                                        <?php $doctor_name = trim($doctor['first_name'] . ' ' . $doctor['last_name']); ?>
+                                        <?php $is_selected = $saved_doctor === $doctor_name; $doctor_exists = $doctor_exists || $is_selected; ?>
+                                        <option value="<?php echo htmlspecialchars($doctor_name); ?>" <?php echo $is_selected ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($doctor_name . ($doctor['specialization'] ? ' - ' . $doctor['specialization'] : '')); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                    <?php if ($saved_doctor !== '' && !$doctor_exists): ?>
+                                        <option value="<?php echo htmlspecialchars($saved_doctor); ?>" selected><?php echo htmlspecialchars($saved_doctor); ?></option>
+                                    <?php endif; ?>
+                                </select>
+                            </div>
+                            <div class="form-field form-field-wide">
+                                <label>Treatment Plan</label>
+                                <input type="text" name="treatment_plan" value="<?php echo htmlspecialchars($edit_user['treatment_plan'] ?? ''); ?>">
+                            </div>
+                            <div class="form-field">
+                                <label>Patient Status</label>
+                                <select name="patient_status">
+                                    <?php foreach (['active', 'scheduled', 'stable'] as $patient_status): ?>
+                                        <option value="<?php echo $patient_status; ?>" <?php echo ($edit_user['patient_status'] ?? 'active') === $patient_status ? 'selected' : ''; ?>><?php echo ucfirst($patient_status); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
                             </div>
                         <?php elseif ($edit_user['role'] === 'staff'): ?>
                             <div class="form-field">

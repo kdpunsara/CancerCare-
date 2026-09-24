@@ -17,6 +17,46 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $action = $_POST['action'] ?? '';
 
 switch ($action) {
+
+        // --- ACTION: UPDATE MEDICAL RECORD / DIAGNOSIS ---
+        case 'update_diagnosis':
+            $record_id            = intval($_POST['record_id'] ?? 0);
+            $patient_user_id      = intval($_POST['patient_user_id'] ?? 0);
+            $diagnosis            = trim($_POST['diagnosis'] ?? '');
+            $cancer_stage         = trim($_POST['cancer_stage'] ?? '');
+            $clinical_notes       = trim($_POST['clinical_notes'] ?? '');
+            $treatment_plan       = trim($_POST['treatment_plan'] ?? '');
+            $future_treatment_plan = trim($_POST['future_treatment_plan'] ?? '');
+
+            // Basic validation
+            if ($record_id <= 0 || $patient_user_id <= 0 || empty($diagnosis) || empty($cancer_stage) || empty($clinical_notes)) {
+                header("Location: views/view_records.php?patient=" . $patient_user_id . "&record=" . $record_id . "&error=invalid_record");
+                exit();
+            }
+
+            // Security: Verify this record belongs to this doctor and patient
+            $chk = $conn->prepare("SELECT patient_user_id FROM MedicalRecord WHERE record_id = ? AND doctor_user_id = ?");
+            $chk->bind_param("ii", $record_id, $doctor_id);
+            $chk->execute();
+            $authorized_record = $chk->get_result()->fetch_assoc();
+            if (!$authorized_record || (int) $authorized_record['patient_user_id'] !== $patient_user_id) {
+                header("Location: views/view_records.php?error=unauthorized");
+                exit();
+            }
+
+            $sql = "INSERT INTO MedicalRecord
+                        (patient_user_id, doctor_user_id, diagnosis, cancer_stage, clinical_notes,
+                         treatment_plan, future_treatment_plan, record_date)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("iisssss", $patient_user_id, $doctor_id, $diagnosis, $cancer_stage, $clinical_notes, $treatment_plan, $future_treatment_plan);
+
+            if ($stmt->execute()) {
+                header("Location: views/view_records.php?patient=" . $patient_user_id . "&msg=record_saved");
+            } else {
+                header("Location: views/view_records.php?patient=" . $patient_user_id . "&record=" . $record_id . "&error=db_error");
+            }
+            exit();
     case 'update_profile':
         $email = trim($_POST['email'] ?? '');
         $phone = trim($_POST['phone'] ?? '');

@@ -62,10 +62,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || isset($_GET['action'])) {
                     $city        = trim($_POST['city'] ?? '');
                     $blood_group = trim($_POST['blood_group'] ?? '');
                     $allergies   = trim($_POST['allergies'] ?? '');
+                    $age         = ($_POST['age'] ?? '') !== '' ? intval($_POST['age']) : null;
+                    $emergency_contact = trim($_POST['emergency_contact'] ?? '');
+                    $cancer_type = trim($_POST['cancer_type'] ?? '');
+                    $stage = trim($_POST['stage'] ?? '');
+                    $assigned_doctor = trim($_POST['assigned_doctor'] ?? '');
+                    $treatment_plan = trim($_POST['treatment_plan'] ?? '');
+                    $patient_status = $_POST['patient_status'] ?? 'active';
+                    if (!in_array($patient_status, ['active', 'scheduled', 'stable'], true)) {
+                        $patient_status = 'active';
+                    }
                     
-                    $sql_profile = "INSERT INTO Patient (user_id, nic, first_name, last_name, dob, gender, address, city, blood_group, allergies) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                    $sql_profile = "INSERT INTO Patient (user_id, nic, first_name, last_name, dob, gender, address, city, blood_group, allergies, age, emergency_contact, cancer_type, stage, assigned_doctor, treatment_plan, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                     $stmt_p = $conn->prepare($sql_profile);
-                    $stmt_p->bind_param("isssssssss", $new_user_id, $nic, $first_name, $last_name, $dob, $gender, $address, $city, $blood_group, $allergies);
+                    $stmt_p->bind_param('i' . str_repeat('s', 9) . 'i' . str_repeat('s', 6), $new_user_id, $nic, $first_name, $last_name, $dob, $gender, $address, $city, $blood_group, $allergies, $age, $emergency_contact, $cancer_type, $stage, $assigned_doctor, $treatment_plan, $patient_status);
                     $stmt_p->execute();
                     
                 } elseif ($role === 'staff') {
@@ -163,8 +173,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || isset($_GET['action'])) {
                     $city = trim($_POST['city'] ?? '');
                     $blood_group = trim($_POST['blood_group'] ?? '');
                     $allergies = trim($_POST['allergies'] ?? '');
-                    $stmt_profile = $conn->prepare("UPDATE Patient SET nic = ?, first_name = ?, last_name = ?, dob = ?, gender = ?, address = ?, city = ?, blood_group = ?, allergies = ? WHERE user_id = ?");
-                    $stmt_profile->bind_param("sssssssssi", $nic, $first_name, $last_name, $dob, $gender, $address, $city, $blood_group, $allergies, $user_id);
+                    $age = ($_POST['age'] ?? '') !== '' ? intval($_POST['age']) : null;
+                    $emergency_contact = trim($_POST['emergency_contact'] ?? '');
+                    $cancer_type = trim($_POST['cancer_type'] ?? '');
+                    $stage = trim($_POST['stage'] ?? '');
+                    $assigned_doctor = trim($_POST['assigned_doctor'] ?? '');
+                    $treatment_plan = trim($_POST['treatment_plan'] ?? '');
+                    $patient_status = $_POST['patient_status'] ?? 'active';
+                    if (!in_array($patient_status, ['active', 'scheduled', 'stable'], true)) {
+                        $patient_status = 'active';
+                    }
+                    $stmt_profile = $conn->prepare("UPDATE Patient SET nic = ?, first_name = ?, last_name = ?, dob = ?, gender = ?, address = ?, city = ?, blood_group = ?, allergies = ?, age = ?, emergency_contact = ?, cancer_type = ?, stage = ?, assigned_doctor = ?, treatment_plan = ?, status = ? WHERE user_id = ?");
+                    $stmt_profile->bind_param(str_repeat('s', 9) . 'i' . str_repeat('s', 6) . 'i', $nic, $first_name, $last_name, $dob, $gender, $address, $city, $blood_group, $allergies, $age, $emergency_contact, $cancer_type, $stage, $assigned_doctor, $treatment_plan, $patient_status, $user_id);
                 } elseif ($role === 'staff') {
                     $designation = trim($_POST['designation'] ?? '');
                     $department = trim($_POST['department'] ?? '');
