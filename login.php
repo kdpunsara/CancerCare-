@@ -51,7 +51,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $error_message = "Your account is inactive or suspended. Please contact the administrator.";
             } 
             // Verify the password securely
-            elseif (password_verify($password, $user['password_hash'])) {
+                elseif ((function_exists('password_verify') && password_verify($password, $user['password_hash'])) ||
+                    (!function_exists('password_verify') && crypt($password, $user['password_hash']) === $user['password_hash'])) {
                 
                 // Success! Set session variables
                 $_SESSION['user_id'] = $user['user_id'];

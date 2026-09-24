@@ -1,12 +1,12 @@
 <?php
-session_start();
-require_once __DIR__ . '/../../../config/database.php';
-
-if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'patient') {
-    header("Location: ../../../login.php");
-    exit();
-}
-$patient_id = (int) $_SESSION['user_id'];
+require_once __DIR__ . '/../patient_data.php';
+$upcoming_appointments = array_filter($appointments, function ($appointment) {
+  return $appointment['appointment_status'] === 'upcoming';
+});
+$active_prescriptions = array_filter($prescriptions, function ($prescription) {
+  return $prescription['status'] === 'active';
+});
+$latest_record = count($medical_records) ? $medical_records[0] : null;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -14,7 +14,7 @@ $patient_id = (int) $_SESSION['user_id'];
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard — Apeksha OncoCare</title>
-<link rel="stylesheet" href="../../../public/css/base.css">
+<link rel="stylesheet" href="../../../public/css/base.css?v=3">
 <link rel="stylesheet" href="../../../public/css/dashboard.css">
 </head>
 <body>
@@ -102,16 +102,16 @@ $patient_id = (int) $_SESSION['user_id'];
 
       <!-- WELCOME CARD -->
       <div class="card welcome-card">
-        <h3>Welcome, Sandun!</h3>
-        <p class="welcome-meta">Patient ID: <strong>P-1001</strong> &nbsp;·&nbsp; Doctor: <strong>Dr. Fernando</strong></p>
+        <h3>Welcome, <?= htmlspecialchars($full_name) ?>!</h3>
+        <p class="welcome-meta">Patient ID: <strong>P-<?= (int) $patient_id ?></strong></p>
 
         <div class="progress-block">
           <div class="progress-heading">
             <span class="progress-title">Treatment Progress</span>
-            <span class="progress-value">45%</span>
+            <span class="progress-value"><?= $latest_record ? 'Active' : 'No record' ?></span>
           </div>
           <div class="progress-track">
-            <div class="progress-fill" style="width:45%;"></div>
+            <div class="progress-fill" style="width:<?= $latest_record ? '45' : '0' ?>%;"></div>
           </div>
           <p class="progress-caption">Chemotherapy — Cycle 2</p>
         </div>
@@ -125,8 +125,8 @@ $patient_id = (int) $_SESSION['user_id'];
             <span class="icon icon-appointments" aria-hidden="true"></span>
           </div>
           <p class="stat-label">My Appointments</p>
-          <p class="stat-value">2</p>
-          <p class="stat-sub">1 pending</p>
+          <p class="stat-value"><?= count($appointments) ?></p>
+          <p class="stat-sub"><?= count($upcoming_appointments) ?> upcoming</p>
         </div>
 
         <div class="card stat-card">
@@ -134,7 +134,7 @@ $patient_id = (int) $_SESSION['user_id'];
             <span class="icon icon-prescriptions" aria-hidden="true"></span>
           </div>
           <p class="stat-label">Prescriptions</p>
-          <p class="stat-value">1</p>
+          <p class="stat-value"><?= count($active_prescriptions) ?></p>
           <p class="stat-sub">Active medications</p>
         </div>
 
@@ -144,7 +144,7 @@ $patient_id = (int) $_SESSION['user_id'];
           </div>
           <p class="stat-label">Treatment Stage</p>
           <p class="stat-value stat-value-text">Stage II</p>
-          <p class="stat-sub">Chemotherapy — Cycle 2</p>
+          <p class="stat-sub"><?= htmlspecialchars($latest_record ? $latest_record['cancer_stage'] : 'Not recorded') ?></p>
         </div>
 
         <div class="card stat-card">

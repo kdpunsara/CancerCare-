@@ -1,12 +1,5 @@
 <?php
-session_start();
-require_once __DIR__ . '/../../../config/database.php';
-
-if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'patient') {
-    header("Location: ../../../login.php");
-    exit();
-}
-$patient_id = (int) $_SESSION['user_id'];
+require_once __DIR__ . '/../patient_data.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -14,7 +7,9 @@ $patient_id = (int) $_SESSION['user_id'];
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Motivation & Awareness — Apeksha OncoCare</title>
-<link rel="stylesheet" href="../../../public/css/base.css">
+<link rel="stylesheet" href="../../../public/css/base.css?v=3">
+<link rel="stylesheet" href="../../../public/css/dashboard.css?v=3">
+<link rel="stylesheet" href="../../../public/css/motivation.css?v=3">
 
 </head>
 <body>
@@ -111,42 +106,23 @@ $patient_id = (int) $_SESSION['user_id'];
       </div>
 
       <div class="resource-grid">
-          <div class="resource-card">
-            <span class="resource-tag tag-article">Article</span>
-            <h4 class="resource-title">Understanding Chemotherapy Fatigue</h4>
-            <p class="resource-desc">Why tiredness during Cycle 2 is common, and simple ways to manage energy through the week.</p>
-            <p class="resource-meta">5 min read · Apeksha Care Team</p>
-          </div>
-          <div class="resource-card">
-            <span class="resource-tag tag-video">Video</span>
-            <h4 class="resource-title">Breathing Exercises for Calm</h4>
-            <p class="resource-desc">A short guided breathing session you can follow before or after treatment sessions.</p>
-            <p class="resource-meta">8 min video · Wellness Center</p>
-          </div>
-          <div class="resource-card">
-            <span class="resource-tag tag-story">Story</span>
-            <h4 class="resource-title">Nadeesha's Journey — One Year On</h4>
-            <p class="resource-desc">A fellow patient shares what helped her stay hopeful through chemotherapy and recovery.</p>
-            <p class="resource-meta">6 min read · Patient Story</p>
-          </div>
-          <div class="resource-card">
-            <span class="resource-tag tag-guide">Guide</span>
-            <h4 class="resource-title">Talking to Family About Your Diagnosis</h4>
-            <p class="resource-desc">Practical tips for opening up conversations with loved ones at your own pace.</p>
-            <p class="resource-meta">4 min read · Counselling Team</p>
-          </div>
-          <div class="resource-card">
-            <span class="resource-tag tag-article">Article</span>
-            <h4 class="resource-title">Sleep and Recovery During Treatment</h4>
-            <p class="resource-desc">How to build a restful night routine that supports your body's healing process.</p>
-            <p class="resource-meta">5 min read · Apeksha Care Team</p>
-          </div>
-          <div class="resource-card">
-            <span class="resource-tag tag-video">Video</span>
-            <h4 class="resource-title">Gentle Movement for Low-Energy Days</h4>
-            <p class="resource-desc">Light stretches you can do from a chair or bed on days when energy is limited.</p>
-            <p class="resource-meta">10 min video · Physiotherapy Unit</p>
-          </div>
+          <?php if (count($motivation_resources) === 0): ?>
+            <div class="resource-empty">
+              <span class="icon icon-motivation" aria-hidden="true"></span>
+              <h4>No motivation resources available yet</h4>
+              <p>Your care team will publish helpful articles, videos, and stories here.</p>
+            </div>
+          <?php else: ?>
+          <?php foreach ($motivation_resources as $resource): ?>
+            <div class="resource-card">
+              <span class="resource-tag tag-<?= htmlspecialchars($resource['content_type']) ?>"><?= htmlspecialchars(ucfirst($resource['content_type'])) ?></span>
+              <h4 class="resource-title"><?= htmlspecialchars($resource['title']) ?></h4>
+              <p class="resource-desc"><?= htmlspecialchars($resource['description']) ?></p>
+              <p class="resource-meta"><?= htmlspecialchars($resource['category'] ?: 'Apeksha Care Team') ?> · <?= htmlspecialchars($resource['published_date'] ?: '') ?></p>
+              <?php if (!empty($resource['content_url'])): ?><a href="<?= htmlspecialchars($resource['content_url']) ?>" target="_blank" rel="noopener">Open resource</a><?php endif; ?>
+            </div>
+          <?php endforeach; ?>
+          <?php endif; ?>
       </div>
 
       <div class="card panel">

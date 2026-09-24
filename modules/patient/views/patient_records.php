@@ -1,12 +1,5 @@
 <?php
-session_start();
-require_once __DIR__ . '/../../../config/database.php';
-
-if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'patient') {
-    header("Location: ../../../login.php");
-    exit();
-}
-$patient_id = (int) $_SESSION['user_id'];
+require_once __DIR__ . '/../patient_data.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -14,7 +7,8 @@ $patient_id = (int) $_SESSION['user_id'];
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Medical Records — Apeksha OncoCare</title>
-<link rel="stylesheet" href="../../../public/css/base.css">
+<link rel="stylesheet" href="../../../public/css/base.css?v=3">
+<link rel="stylesheet" href="../../../public/css/dashboard.css?v=2">
 </head>
 <body>
 
@@ -139,7 +133,7 @@ $patient_id = (int) $_SESSION['user_id'];
           <h3>Search Medical Records</h3>
         </div>
 
-        <form class="search-bar" action="records.html" method="get">
+        <form class="search-bar" action="patient_records.php" method="get">
           <div class="search-field">
             <span class="icon icon-search" aria-hidden="true"></span>
             <input type="text" name="q" placeholder="Search by record name, type or doctor…">
@@ -167,38 +161,26 @@ $patient_id = (int) $_SESSION['user_id'];
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td class="med-name">Full Blood Count (FBC) Report</td>
-                <td>Lab Result</td>
-                <td>2 Jul 2026</td>
-                <td>Dr. Fernando</td>
-                <td><span class="badge badge-done">Reviewed</span></td>
-                <td><span class="link-action">View</span></td>
-              </tr>
-              <tr>
-                <td class="med-name">Liver Function Test</td>
-                <td>Lab Result</td>
-                <td>21 Jun 2026</td>
-                <td>Dr. Fernando</td>
-                <td><span class="badge badge-done">Reviewed</span></td>
-                <td><span class="link-action">View</span></td>
-              </tr>
-              <tr>
-                <td class="med-name">Renal Function Test</td>
-                <td>Lab Result</td>
-                <td>21 Jun 2026</td>
-                <td>Dr. Fernando</td>
-                <td><span class="badge badge-done">Reviewed</span></td>
-                <td><span class="link-action">View</span></td>
-              </tr>
-              <tr>
-                <td class="med-name">Tumour Marker Panel (CA-125)</td>
-                <td>Lab Result</td>
-                <td>7 Jun 2026</td>
-                <td>Dr. Fernando</td>
-                <td><span class="badge badge-active">New</span></td>
-                <td><span class="link-action">View</span></td>
-              </tr>
+              <?php foreach ($medical_reports as $report): ?>
+                <tr>
+                  <td class="med-name"><?= htmlspecialchars($report['report_title']) ?></td>
+                  <td><?= htmlspecialchars(ucwords(str_replace('_', ' ', $report['report_type']))) ?></td>
+                  <td><?= htmlspecialchars(date('d M Y', strtotime($report['upload_date']))) ?></td>
+                  <td>Care Team</td>
+                  <td><span class="badge badge-done">Available</span></td>
+                  <td><a class="link-action" href="<?= htmlspecialchars($report['file_path']) ?>" target="_blank" rel="noopener">View</a></td>
+                </tr>
+              <?php endforeach; ?>
+              <?php foreach ($medical_records as $record): ?>
+                <tr>
+                  <td class="med-name"><?= htmlspecialchars($record['diagnosis']) ?></td>
+                  <td>Treatment Note</td>
+                  <td><?= htmlspecialchars(date('d M Y', strtotime($record['record_date']))) ?></td>
+                  <td><?= htmlspecialchars('Dr. ' . $record['doctor_first_name'] . ' ' . $record['doctor_last_name']) ?></td>
+                  <td><span class="badge badge-done">Reviewed</span></td>
+                  <td><span class="link-action">View</span></td>
+                </tr>
+              <?php endforeach; ?>
             </tbody>
           </table>
         </div>

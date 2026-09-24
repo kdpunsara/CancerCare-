@@ -44,6 +44,41 @@
   gap: 10px;
 }
 
+.resource-empty{
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 190px;
+  padding: 28px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.resource-empty .icon-motivation{
+  width: 30px;
+  height: 30px;
+  margin-bottom: 12px;
+  background-color: var(--blue);
+  border-radius: 50%;
+  background-size: 18px;
+}
+
+.resource-empty h4{
+  margin: 0 0 6px;
+  color: var(--text);
+  font-size: 15px;
+}
+
+.resource-empty p{
+  margin: 0;
+  font-size: 13px;
+}
+
 .resource-tag{
   align-self: flex-start;
   font-size: 10.5px;

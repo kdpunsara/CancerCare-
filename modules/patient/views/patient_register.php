@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Create Account — Apeksha OncoCare</title>
-<link rel="stylesheet" href="../../../public/css/base.css">
+<link rel="stylesheet" href="../../../public/css/base.css?v=3">
 <link rel="stylesheet" href="../../../public/css/auth.css">
 </head>
 <body>
@@ -91,36 +91,37 @@
           <h2 class="auth-title">Create your account</h2>
           <p class="auth-subtitle">Register as a patient to track your care online.</p>
 
-          <form class="app-form" action="patient_register.php" method="get">
+          <form class="app-form" action="../patient_actions.php" method="post">
+            <input type="hidden" name="action" value="register_patient">
 
             <div class="form-grid">
               <div class="form-field">
                 <label for="reg-name">Full Name</label>
-                <input type="text" id="reg-name" name="reg-name" placeholder="Your full name" required>
+                <input type="text" id="reg-name" name="full_name" placeholder="Your full name" required>
               </div>
               <div class="form-field">
                 <label for="reg-nic">NIC Number</label>
-                <input type="text" id="reg-nic" name="reg-nic" placeholder="200012345678" required>
+                <input type="text" id="reg-nic" name="nic" placeholder="200012345678" required>
               </div>
               <div class="form-field">
                 <label for="reg-dob">Date of Birth</label>
-                <input type="date" id="reg-dob" name="reg-dob" required>
+                <input type="date" id="reg-dob" name="dob" required>
               </div>
               <div class="form-field">
                 <label for="reg-mobile">Mobile Number</label>
-                <input type="tel" id="reg-mobile" name="reg-mobile" placeholder="+94 7X XXX XXXX" required>
+                <input type="tel" id="reg-mobile" name="phone" placeholder="+94 7X XXX XXXX" required>
               </div>
               <div class="form-field form-field-wide">
                 <label for="reg-email">Email Address</label>
-                <input type="email" id="reg-email" name="reg-email" placeholder="you@email.com" required>
+                <input type="email" id="reg-email" name="email" placeholder="you@email.com" required>
               </div>
               <div class="form-field">
                 <label for="reg-password">Password</label>
-                <input type="password" id="reg-password" name="reg-password" placeholder="Create a password" required>
+                <input type="password" id="reg-password" name="password" placeholder="Create a password" minlength="8" required>
               </div>
               <div class="form-field">
                 <label for="reg-confirm">Confirm Password</label>
-                <input type="password" id="reg-confirm" name="reg-confirm" placeholder="Re-enter your password" required>
+                <input type="password" id="reg-confirm" name="confirm_password" placeholder="Re-enter your password" minlength="8" required>
               </div>
             </div>
 

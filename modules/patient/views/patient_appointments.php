@@ -1,13 +1,5 @@
 <?php
-session_start();
-require_once __DIR__ . '/../../../config/database.php';
-
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'patient') {
-    header("Location: ../../../index.php");
-    exit();
-}
-
-$patient_id = (int) $_SESSION['user_id'];
+require_once __DIR__ . '/../patient_data.php';
 
 $stmt = $conn->prepare(
     "SELECT reminder_id, reminder_title, reminder_date, reminder_time
@@ -25,7 +17,8 @@ $reminders = $stmt->get_result();
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Appointments — Apeksha OncoCare</title>
-<link rel="stylesheet" href="../../../public/css/base.css">
+<link rel="stylesheet" href="../../../public/css/base.css?v=3">
+<link rel="stylesheet" href="../../../public/css/appointments.css">
 </head>
 <body>
 
@@ -132,7 +125,7 @@ $reminders = $stmt->get_result();
                 <div class="reminder-details">
                   <p class="reminder-title"><?= htmlspecialchars($reminder['reminder_title']) ?></p>
                   <p class="reminder-date">
-                    <?= htmlspecialchars(date("M j, Y g:i A", strtotime($reminder['reminder_date'] . " " . ($reminder['reminder_time'] ?? '00:00:00')))) ?>
+                    <?= htmlspecialchars(date("M j, Y g:i A", strtotime($reminder['reminder_date'] . " " . (isset($reminder['reminder_time']) ? $reminder['reminder_time'] : '00:00:00')))) ?>
                   </p>
                 </div>
                 <form method="POST" action="../patient_actions.php">
@@ -159,30 +152,17 @@ $reminders = $stmt->get_result();
         </div>
 
         <ul class="appointment-list">
-          <li class="appointment-item confirmed">
-            <div class="appointment-time"><span class="time">09:00</span><span class="date">Jul 5, 2026</span></div>
-            <div class="appointment-info">
-              <p class="appointment-name">Follow-up Consultation</p>
-              <p class="appointment-desc">Dr. Fernando · Oncology · Room 204</p>
-            </div>
-            <span class="status status-confirmed">confirmed</span>
-          </li>
-          <li class="appointment-item pending">
-            <div class="appointment-time"><span class="time">11:00</span><span class="date">Jul 10, 2026</span></div>
-            <div class="appointment-info">
-              <p class="appointment-name">Lab Review</p>
-              <p class="appointment-desc">Dr. Fernando · Pathology · Lab Wing B</p>
-            </div>
-            <span class="status status-pending">pending</span>
-          </li>
-          <li class="appointment-item confirmed">
-            <div class="appointment-time"><span class="time">14:30</span><span class="date">Jul 17, 2026</span></div>
-            <div class="appointment-info">
-              <p class="appointment-name">Chemotherapy — Cycle 3</p>
-              <p class="appointment-desc">Dr. Fernando · Infusion Suite 2</p>
-            </div>
-            <span class="status status-confirmed">confirmed</span>
-          </li>
+          <?php foreach ($appointments as $appointment): ?>
+            <?php if ($appointment['appointment_status'] !== 'upcoming') { continue; } ?>
+            <li class="appointment-item confirmed">
+              <div class="appointment-time"><span class="time"><?= htmlspecialchars(date('H:i', strtotime($appointment['appointment_time']))) ?></span><span class="date"><?= htmlspecialchars(date('M j, Y', strtotime($appointment['appointment_date']))) ?></span></div>
+              <div class="appointment-info">
+                <p class="appointment-name"><?= htmlspecialchars($appointment['reason'] ?: 'Appointment') ?></p>
+                <p class="appointment-desc"><?= htmlspecialchars('Dr. ' . $appointment['doctor_first_name'] . ' ' . $appointment['doctor_last_name']) ?></p>
+              </div>
+              <span class="status status-confirmed">upcoming</span>
+            </li>
+          <?php endforeach; ?>
         </ul>
       </div>
 
@@ -194,30 +174,17 @@ $reminders = $stmt->get_result();
         </div>
 
         <ul class="appointment-list">
-          <li class="appointment-item completed">
-            <div class="appointment-time"><span class="time">10:00</span><span class="date">Jun 21, 2026</span></div>
-            <div class="appointment-info">
-              <p class="appointment-name">Chemotherapy — Cycle 2</p>
-              <p class="appointment-desc">Dr. Fernando · Infusion Suite 1</p>
-            </div>
-            <span class="status status-completed">completed</span>
-          </li>
-          <li class="appointment-item completed">
-            <div class="appointment-time"><span class="time">09:30</span><span class="date">Jun 7, 2026</span></div>
-            <div class="appointment-info">
-              <p class="appointment-name">Initial Consultation</p>
-              <p class="appointment-desc">Dr. Fernando · Oncology · Room 204</p>
-            </div>
-            <span class="status status-completed">completed</span>
-          </li>
-          <li class="appointment-item cancelled">
-            <div class="appointment-time"><span class="time">15:00</span><span class="date">May 29, 2026</span></div>
-            <div class="appointment-info">
-              <p class="appointment-name">Nutrition Counselling</p>
-              <p class="appointment-desc">Dietitian Perera · Wellness Center</p>
-            </div>
-            <span class="status status-cancelled">cancelled</span>
-          </li>
+          <?php foreach ($appointments as $appointment): ?>
+            <?php if ($appointment['appointment_status'] !== 'completed') { continue; } ?>
+            <li class="appointment-item completed">
+              <div class="appointment-time"><span class="time"><?= htmlspecialchars(date('H:i', strtotime($appointment['appointment_time']))) ?></span><span class="date"><?= htmlspecialchars(date('M j, Y', strtotime($appointment['appointment_date']))) ?></span></div>
+              <div class="appointment-info">
+                <p class="appointment-name"><?= htmlspecialchars($appointment['reason'] ?: 'Appointment') ?></p>
+                <p class="appointment-desc"><?= htmlspecialchars('Dr. ' . $appointment['doctor_first_name'] . ' ' . $appointment['doctor_last_name']) ?></p>
+              </div>
+              <span class="status status-completed">completed</span>
+            </li>
+          <?php endforeach; ?>
         </ul>
       </div>
 

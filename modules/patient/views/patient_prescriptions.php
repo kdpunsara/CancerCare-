@@ -1,12 +1,5 @@
 <?php
-session_start();
-require_once __DIR__ . '/../../../config/database.php';
-
-if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'patient') {
-    header("Location: ../../../index.php");
-    exit();
-}
-$patient_id = (int) $_SESSION['user_id'];
+require_once __DIR__ . '/../patient_data.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -14,7 +7,8 @@ $patient_id = (int) $_SESSION['user_id'];
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Prescriptions — Apeksha OncoCare</title>
-<link rel="stylesheet" href="../../../public/css/base.css">
+<link rel="stylesheet" href="../../../public/css/base.css?v=3">
+<link rel="stylesheet" href="../../../public/css/prescription.css">
 </head>
 <body>
 
@@ -117,30 +111,17 @@ $patient_id = (int) $_SESSION['user_id'];
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td class="med-name">Cisplatin</td>
-                <td>75 mg/m²</td>
-                <td>Once every 21 days</td>
-                <td>Dr. Fernando</td>
-                <td>21 May 2026</td>
-                <td><span class="badge badge-active">Active</span></td>
-              </tr>
-              <tr>
-                <td class="med-name">Ondansetron</td>
-                <td>8 mg</td>
-                <td>Twice daily, as needed</td>
-                <td>Dr. Fernando</td>
-                <td>21 May 2026</td>
-                <td><span class="badge badge-active">Active</span></td>
-              </tr>
-              <tr>
-                <td class="med-name">Folic Acid</td>
-                <td>5 mg</td>
-                <td>Once daily</td>
-                <td>Dr. Fernando</td>
-                <td>21 May 2026</td>
-                <td><span class="badge badge-active">Active</span></td>
-              </tr>
+              <?php foreach ($prescriptions as $prescription): ?>
+                <?php if ($prescription['status'] !== 'active') { continue; } ?>
+                <tr>
+                  <td class="med-name"><?= htmlspecialchars($prescription['medicine_name']) ?></td>
+                  <td><?= htmlspecialchars($prescription['dosage']) ?></td>
+                  <td><?= htmlspecialchars($prescription['frequency']) ?></td>
+                  <td><?= htmlspecialchars('Dr. ' . $prescription['doctor_first_name'] . ' ' . $prescription['doctor_last_name']) ?></td>
+                  <td><?= htmlspecialchars(date('d M Y', strtotime($prescription['prescription_date']))) ?></td>
+                  <td><span class="badge badge-active">Active</span></td>
+                </tr>
+              <?php endforeach; ?>
             </tbody>
           </table>
         </div>
@@ -164,22 +145,17 @@ $patient_id = (int) $_SESSION['user_id'];
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td class="med-name">Amoxicillin</td>
-                <td>500 mg</td>
-                <td>Three times daily</td>
-                <td>Dr. Fernando</td>
-                <td>3 – 10 Apr 2026</td>
-                <td><span class="badge badge-done">Completed</span></td>
-              </tr>
-              <tr>
-                <td class="med-name">Paracetamol</td>
-                <td>500 mg</td>
-                <td>As needed for fever</td>
-                <td>Dr. Fernando</td>
-                <td>Since 2 Feb 2026</td>
-                <td><span class="badge badge-done">Completed</span></td>
-              </tr>
+              <?php foreach ($prescriptions as $prescription): ?>
+                <?php if ($prescription['status'] === 'active') { continue; } ?>
+                <tr>
+                  <td class="med-name"><?= htmlspecialchars($prescription['medicine_name']) ?></td>
+                  <td><?= htmlspecialchars($prescription['dosage']) ?></td>
+                  <td><?= htmlspecialchars($prescription['frequency']) ?></td>
+                  <td><?= htmlspecialchars('Dr. ' . $prescription['doctor_first_name'] . ' ' . $prescription['doctor_last_name']) ?></td>
+                  <td><?= htmlspecialchars($prescription['duration'] ?: date('d M Y', strtotime($prescription['prescription_date']))) ?></td>
+                  <td><span class="badge badge-done"><?= htmlspecialchars(ucfirst($prescription['status'])) ?></span></td>
+                </tr>
+              <?php endforeach; ?>
             </tbody>
           </table>
         </div>

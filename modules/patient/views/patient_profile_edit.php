@@ -1,21 +1,5 @@
 <?php
-session_start();
-require_once __DIR__ . '/../../../config/database.php';
-
-if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'patient') {
-    header("Location: ../../../index.php");
-    exit();
-}
-$patient_id = (int) $_SESSION['user_id'];
-?>
-<?php
-$stmt = $conn->prepare("SELECT u.email, u.phone, p.nic, p.first_name, p.last_name, p.dob, p.gender, p.address, p.city, p.blood_group, p.allergies
-                        FROM User u JOIN Patient p ON u.user_id = p.user_id
-                        WHERE u.user_id = ?");
-$stmt->bind_param("i", $patient_id);
-$stmt->execute();
-$patient = $stmt->get_result()->fetch_assoc();
-if (!$patient) { die("Patient profile not found."); }
+require_once __DIR__ . '/../patient_data.php';
 $full_name = trim($patient['first_name'].' '.$patient['last_name']);
 ?>
 <!DOCTYPE html>
@@ -24,7 +8,8 @@ $full_name = trim($patient['first_name'].' '.$patient['last_name']);
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Edit Profile — Apeksha OncoCare</title>
-<link rel="stylesheet" href="../../../public/css/base.css">
+<link rel="stylesheet" href="../../../public/css/base.css?v=3">
+<link rel="stylesheet" href="../../../public/css/profile.css">
 </head>
 <body>
 
@@ -120,7 +105,7 @@ $full_name = trim($patient['first_name'].' '.$patient['last_name']);
           <div class="form-grid">
             <div class="form-field">
               <label for="fullname">Full Name</label>
-              <input type="text" id="fullname" name="fullname" value="Sandun Jayasekara">
+                <input type="text" id="fullname" name="full_name" value="<?= htmlspecialchars($full_name) ?>" required>
             </div>
             <div class="form-field">
               <label for="dob">Date of Birth</label>

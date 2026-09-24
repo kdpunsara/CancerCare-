@@ -1,12 +1,5 @@
 <?php
-session_start();
-require_once __DIR__ . '/../../../config/database.php';
-
-if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'patient') {
-    header("Location: ../../../login.php");
-    exit();
-}
-$patient_id = (int) $_SESSION['user_id'];
+require_once __DIR__ . '/../patient_data.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -14,8 +7,9 @@ $patient_id = (int) $_SESSION['user_id'];
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Wellness & Meals — Apeksha OncoCare</title>
-<link rel="stylesheet" href="../../../public/css/base.css">
-<link rel="stylesheet" href="../../../public/css/wellness.css">
+<link rel="stylesheet" href="../../../public/css/base.css?v=3">
+<link rel="stylesheet" href="../../../public/css/dashboard.css?v=3">
+<link rel="stylesheet" href="../../../public/css/wellness.css?v=3">
 </head>
 <body>
 
@@ -106,55 +100,23 @@ $patient_id = (int) $_SESSION['user_id'];
       </div>
 
       <div class="meal-grid">
-          <div class="meal-day-card">
-            <p class="meal-day-name">Monday</p>
-            <div class="meal-row"><span class="meal-tag meal-tag-breakfast">Breakfast</span><span class="meal-text">Kola kanda with a boiled egg</span></div>
-            <div class="meal-row"><span class="meal-tag meal-tag-lunch">Lunch</span><span class="meal-text">Red rice, dhal curry, steamed greens</span></div>
-            <div class="meal-row"><span class="meal-tag meal-tag-dinner">Dinner</span><span class="meal-text">Vegetable soup with grilled fish</span></div>
-            <div class="meal-row"><span class="meal-tag meal-tag-snack">Snack</span><span class="meal-text">Papaya slices</span></div>
-          </div>
-          <div class="meal-day-card">
-            <p class="meal-day-name">Tuesday</p>
-            <div class="meal-row"><span class="meal-tag meal-tag-breakfast">Breakfast</span><span class="meal-text">Plain oats with banana</span></div>
-            <div class="meal-row"><span class="meal-tag meal-tag-lunch">Lunch</span><span class="meal-text">Brown rice, chicken curry, beetroot salad</span></div>
-            <div class="meal-row"><span class="meal-tag meal-tag-dinner">Dinner</span><span class="meal-text">String hoppers with dhal curry</span></div>
-            <div class="meal-row"><span class="meal-tag meal-tag-snack">Snack</span><span class="meal-text">Coconut water</span></div>
-          </div>
-          <div class="meal-day-card">
-            <p class="meal-day-name">Wednesday</p>
-            <div class="meal-row"><span class="meal-tag meal-tag-breakfast">Breakfast</span><span class="meal-text">Milk rice with jaggery</span></div>
-            <div class="meal-row"><span class="meal-tag meal-tag-lunch">Lunch</span><span class="meal-text">Red rice, fish curry, sautéed cabbage</span></div>
-            <div class="meal-row"><span class="meal-tag meal-tag-dinner">Dinner</span><span class="meal-text">Vegetable soup with brown bread</span></div>
-            <div class="meal-row"><span class="meal-tag meal-tag-snack">Snack</span><span class="meal-text">Sliced mango</span></div>
-          </div>
-          <div class="meal-day-card">
-            <p class="meal-day-name">Thursday</p>
-            <div class="meal-row"><span class="meal-tag meal-tag-breakfast">Breakfast</span><span class="meal-text">Roti with mild coconut sambol</span></div>
-            <div class="meal-row"><span class="meal-tag meal-tag-lunch">Lunch</span><span class="meal-text">Brown rice, lentil curry, pumpkin curry</span></div>
-            <div class="meal-row"><span class="meal-tag meal-tag-dinner">Dinner</span><span class="meal-text">Rice porridge with vegetables</span></div>
-            <div class="meal-row"><span class="meal-tag meal-tag-snack">Snack</span><span class="meal-text">Boiled chickpeas</span></div>
-          </div>
-          <div class="meal-day-card">
-            <p class="meal-day-name">Friday</p>
-            <div class="meal-row"><span class="meal-tag meal-tag-breakfast">Breakfast</span><span class="meal-text">Steamed idli with sambar</span></div>
-            <div class="meal-row"><span class="meal-tag meal-tag-lunch">Lunch</span><span class="meal-text">Red rice, chicken curry, carrot salad</span></div>
-            <div class="meal-row"><span class="meal-tag meal-tag-dinner">Dinner</span><span class="meal-text">Noodle soup with tofu</span></div>
-            <div class="meal-row"><span class="meal-tag meal-tag-snack">Snack</span><span class="meal-text">Watermelon cubes</span></div>
-          </div>
-          <div class="meal-day-card">
-            <p class="meal-day-name">Saturday</p>
-            <div class="meal-row"><span class="meal-tag meal-tag-breakfast">Breakfast</span><span class="meal-text">Vegetable kottu (light oil)</span></div>
-            <div class="meal-row"><span class="meal-tag meal-tag-lunch">Lunch</span><span class="meal-text">Brown rice, fish curry, green beans</span></div>
-            <div class="meal-row"><span class="meal-tag meal-tag-dinner">Dinner</span><span class="meal-text">Clear soup with steamed vegetables</span></div>
-            <div class="meal-row"><span class="meal-tag meal-tag-snack">Snack</span><span class="meal-text">Plain yoghurt</span></div>
-          </div>
-          <div class="meal-day-card">
-            <p class="meal-day-name">Sunday</p>
-            <div class="meal-row"><span class="meal-tag meal-tag-breakfast">Breakfast</span><span class="meal-text">Wheat pittu with coconut milk</span></div>
-            <div class="meal-row"><span class="meal-tag meal-tag-lunch">Lunch</span><span class="meal-text">Red rice, egg curry, mixed salad</span></div>
-            <div class="meal-row"><span class="meal-tag meal-tag-dinner">Dinner</span><span class="meal-text">Vegetable stew with rice</span></div>
-            <div class="meal-row"><span class="meal-tag meal-tag-snack">Snack</span><span class="meal-text">Herbal tea &amp; dry fruits</span></div>
-          </div>
+          <?php $meals_by_day = array(); foreach ($meal_plans as $meal) { $meals_by_day[$meal['plan_date']][] = $meal; } ?>
+          <?php if (count($meals_by_day) === 0): ?>
+            <div class="meal-empty">
+              <span class="icon icon-wellness" aria-hidden="true"></span>
+              <h4>No meal plan assigned yet</h4>
+              <p>Your care team will publish your personalised meals here.</p>
+            </div>
+          <?php else: ?>
+            <?php foreach ($meals_by_day as $plan_date => $meals): ?>
+            <div class="meal-day-card">
+              <p class="meal-day-name"><?= htmlspecialchars(date('l, d M Y', strtotime($plan_date))) ?></p>
+              <?php foreach ($meals as $meal): ?>
+                <div class="meal-row"><span class="meal-tag meal-tag-<?= htmlspecialchars($meal['meal_type']) ?>"><?= htmlspecialchars(ucfirst($meal['meal_type'])) ?></span><span class="meal-text"><?= htmlspecialchars($meal['menu_description']) ?></span></div>
+              <?php endforeach; ?>
+            </div>
+            <?php endforeach; ?>
+          <?php endif; ?>
       </div>
 
       <div class="card panel">

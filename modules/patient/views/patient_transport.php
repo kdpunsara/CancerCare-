@@ -1,12 +1,5 @@
 <?php
-session_start();
-require_once __DIR__ . '/../../../config/database.php';
-
-if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'patient') {
-    header("Location: ../../../login.php");
-    exit();
-}
-$patient_id = (int) $_SESSION['user_id'];
+require_once __DIR__ . '/../patient_data.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -14,7 +7,7 @@ $patient_id = (int) $_SESSION['user_id'];
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Transport — Apeksha OncoCare</title>
-<link rel="stylesheet" href="../../../public/css/base.css">
+<link rel="stylesheet" href="../../../public/css/base.css?v=3">
 <link rel="stylesheet" href="../../../public/css/transport.css">
 </head>
 <body>
@@ -192,62 +185,16 @@ $patient_id = (int) $_SESSION['user_id'];
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td class="med-name">Kandy → Maharagama</td>
-                <td>8:00 AM</td>
-                <td>12:00 PM</td>
-                <td>4h 00m</td>
-                <td>Semi-Luxury (CTB 654)</td>
-                <td>Every 1 hour</td>
-              </tr>
-              <tr>
-                <td class="med-name">Kandy → Maharagama</td>
-                <td>6:00 AM</td>
-                <td>10:15 AM</td>
-                <td>4h 15m</td>
-                <td>Normal (CTB 654)</td>
-                <td>Every 45 min</td>
-              </tr>
-              <tr>
-                <td class="med-name">Kurunegala → Maharagama</td>
-                <td>7:00 AM</td>
-                <td>10:30 AM</td>
-                <td>3h 30m</td>
-                <td>Semi-Luxury</td>
-                <td>Every 1 hour</td>
-              </tr>
-              <tr>
-                <td class="med-name">Galle → Maharagama</td>
-                <td>6:30 AM</td>
-                <td>9:30 AM</td>
-                <td>3h 00m</td>
-                <td>Luxury (AC)</td>
-                <td>Every 2 hours</td>
-              </tr>
-              <tr>
-                <td class="med-name">Kurunegala → Maharagama</td>
-                <td>9:00 AM</td>
-                <td>12:15 PM</td>
-                <td>3h 15m</td>
-                <td>Normal (CTB)</td>
-                <td>Every 45 min</td>
-              </tr>
-              <tr>
-                <td class="med-name">Matara → Maharagama</td>
-                <td>5:30 AM</td>
-                <td>9:45 AM</td>
-                <td>4h 15m</td>
-                <td>Luxury (AC)</td>
-                <td>Every 2 hours</td>
-              </tr>
-              <tr>
-                <td class="med-name">Anuradhapura → Maharagama</td>
-                <td>6:00 AM</td>
-                <td>11:00 AM</td>
-                <td>5h 00m</td>
-                <td>Semi-Luxury</td>
-                <td>Every 1.5 hours</td>
-              </tr>
+              <?php foreach ($transport_schedules as $schedule): ?>
+                <tr>
+                  <td class="med-name"><?= htmlspecialchars($schedule['route_name']) ?></td>
+                  <td><?= htmlspecialchars(date('g:i A', strtotime($schedule['departure_time']))) ?></td>
+                  <td><?= htmlspecialchars(date('g:i A', strtotime($schedule['arrival_time']))) ?></td>
+                  <td><?= htmlspecialchars($schedule['vehicle_type']) ?></td>
+                  <td><?= (int) $schedule['capacity'] ?></td>
+                  <td><?= htmlspecialchars($schedule['operating_days']) ?></td>
+                </tr>
+              <?php endforeach; ?>
             </tbody>
           </table>
         </div>
