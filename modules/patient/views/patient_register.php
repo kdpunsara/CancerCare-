@@ -81,6 +81,7 @@
         </div>
       </div>
       <div class="topbar-actions">
+        <a href="../../../logout.php" class="signout-btn">Sign Out</a>
       </div>
     </header>
 

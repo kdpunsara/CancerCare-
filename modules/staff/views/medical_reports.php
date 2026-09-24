@@ -182,6 +182,9 @@ $error   = $_GET['error'] ?? '';
 <a href="benefactor.php" class="nav-item">
     <span class="icon icon-benefactor"></span> Benefactor
 </a>
+<a href="staff_profile.php" class="nav-item">
+    <span class="icon icon-profile"></span> My Profile
+</a>
             </nav>
             <div class="sidebar-footer">
                 <div class="user-card">
@@ -214,16 +217,9 @@ $error   = $_GET['error'] ?? '';
                    
                 </div>
                 <div class="topbar-right">
-                    <button
-                        class="icon-btn notif-btn"
-                        title="Notifications"
-                    >
-                        🔔
-                        <span class="dot"></span>
-                    </button>
-                    <button class="btn btn-outline">
+                    <a href="../../../logout.php" class="btn btn-outline">
                         Sign Out
-                    </button>
+                    </a>
                     <button
                         class="sidebar-toggle"
                         id="sidebarToggle"

@@ -277,6 +277,14 @@ try {
 
             </a>
 
+            <a
+                href="./staff_profile.php"
+                class="nav-item"
+            >
+                <span class="icon icon-profile"></span>
+                My Profile
+            </a>
+
         </nav>
 
 
@@ -375,25 +383,10 @@ try {
                 "
             >
 
-                <!-- NOTIFICATION -->
-
-                <button
-                    style="
-                        background:none;
-                        border:none;
-                        font-size:18px;
-                        cursor:pointer;
-                    "
-                    title="Notifications"
-                >
-                    🔔
-                </button>
-
-
                 <!-- SIGN OUT -->
 
                 <a
-                    href="logout.php"
+                    href="../../../logout.php"
                     class="btn btn-outline"
                     style="
                         padding:6px 14px;

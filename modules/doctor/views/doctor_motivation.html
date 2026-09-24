@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Motivation &amp; Patient Support - CancerCare</title>
+    <link rel="stylesheet" href="../../../public/css/base.css">
+    <link rel="stylesheet" href="../../../public/css/motivation.css">
+    <style>
+        .support-intro {
+            display: grid;
+            grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.65fr);
+            gap: 20px;
+            align-items: stretch;
+        }
+
+        .support-intro .card {
+            padding: 26px 30px;
+        }
+
+        .support-intro h3,
+        .section-heading h3 {
+            margin: 0;
+        }
+
+        .support-intro p {
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin: 10px 0 0;
+            max-width: 680px;
+        }
+
+        .support-stat {
+            background: var(--navy);
+            border-radius: var(--radius-lg);
+            color: #fff;
+            padding: 24px;
+        }
+
+        .support-stat strong {
+            display: block;
+            font-size: 30px;
+            line-height: 1;
+        }
+
+        .support-stat span {
+            display: block;
+            color: rgba(255,255,255,0.65);
+            font-size: 13px;
+            margin-top: 8px;
+        }
+
+        .section-heading {
+            align-items: end;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .section-heading p {
+            color: var(--text-muted);
+            font-size: 13px;
+            margin: 5px 0 0;
+        }
+
+        .suggestion-card {
+            min-height: 220px;
+        }
+
+        .suggestion-card .resource-meta {
+            border-top: 1px solid var(--border);
+            padding-top: 12px;
+        }
+
+        .draft-panel {
+            display: grid;
+            gap: 16px;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        }
+
+        .draft-panel .form-field-wide {
+            grid-column: 1 / -1;
+        }
+
+        .draft-panel input,
+        .draft-panel select,
+        .draft-panel textarea {
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            box-sizing: border-box;
+            font: inherit;
+            padding: 11px 12px;
+            width: 100%;
+        }
+
+        .draft-panel textarea {
+            min-height: 110px;
+            resize: vertical;
+        }
+
+        .draft-note {
+            color: var(--text-faint);
+            font-size: 12px;
+            margin: 0;
+        }
+
+        @media (max-width: 760px) {
+            .support-intro,
+            .draft-panel {
+                grid-template-columns: 1fr;
+            }
+
+            .draft-panel .form-field-wide {
+                grid-column: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-mark">CC</div>
+                <div class="brand-text">
+                    <h1>Cancer Care</h1>
+                    <p>Doctor Module</p>
+                </div>
+            </div>
+
+            <nav class="nav">
+                <p class="nav-label">Main Menu</p>
+                <ul>
+                    <li><a href="doctor_dashboard.php" class="nav-item">
+                        <span class="icon icon-dashboard" aria-hidden="true"></span>
+                        <span class="nav-text">Dashboard</span>
+                    </a></li>
+                    <li><a href="appointments.php" class="nav-item">
+                        <span class="icon icon-appointments" aria-hidden="true"></span>
+                        <span class="nav-text">Appointments</span>
+                    </a></li>
+                    <li><a href="doctor_mypatients.php" class="nav-item">
+                        <span class="icon icon-profile" aria-hidden="true"></span>
+                        <span class="nav-text">My Patients</span>
+                    </a></li>
+                    <li><a href="doctor_prescription.php" class="nav-item">
+                        <span class="icon icon-prescriptions" aria-hidden="true"></span>
+                        <span class="nav-text">Prescriptions</span>
+                    </a></li>
+                </ul>
+
+                <p class="nav-label" style="margin-top: 16px;">Medical Records</p>
+                <ul>
+                    <li><a href="view_records.php" class="nav-item">
+                        <span class="icon icon-records" aria-hidden="true"></span>
+                        <span class="nav-text">View Records</span>
+                    </a></li>
+                </ul>
+
+                <p class="nav-label" style="margin-top: 16px;">Patient Support</p>
+                <ul>
+                    <li><a href="doctor_mealplan.php" class="nav-item">
+                        <span class="icon icon-wellness" aria-hidden="true"></span>
+                        <span class="nav-text">Meal Plans</span>
+                    </a></li>
+                    <li><a href="doctor_motivation.html" class="nav-item active">
+                        <span class="icon icon-motivation" aria-hidden="true"></span>
+                        <span class="nav-text">Motivation &amp; Support</span>
+                    </a></li>
+                </ul>
+
+                <p class="nav-label" style="margin-top: 16px;">Account</p>
+                <ul>
+                    <li><a href="doctor_profile.php" class="nav-item">
+                        <span class="icon icon-profile" aria-hidden="true"></span>
+                        <span class="nav-text">My Profile</span>
+                    </a></li>
+                </ul>
+            </nav>
+
+            <div class="sidebar-user">
+                <div class="avatar">DR</div>
+                <div>
+                    <p class="user-name">Dr. Anura Perera</p>
+                    <p class="user-role">Oncology Specialist</p>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main">
+            <header class="topbar">
+                <div class="topbar-left">
+                    <div>
+                        <h2>Motivation &amp; Patient Support</h2>
+                        <p class="date">Prepare thoughtful encouragement for every stage of care.</p>
+                    </div>
+                </div>
+                <div class="topbar-actions">
+                    <a href="../../../logout.php" class="signout-btn">Sign Out</a>
+                </div>
+            </header>
+
+            <section class="content">
+                <div class="support-intro">
+                    <div class="card">
+                        <h3>Small words can carry a long way.</h3>
+                        <p>Keep a collection of calm, practical messages ready for patients and families navigating treatment, recovery, and the days between appointments.</p>
+                    </div>
+                    <div class="support-stat">
+                        <strong>12</strong>
+                        <span>sample suggestions ready for patient conversations</span>
+                    </div>
+                </div>
+
+                <div class="quote-card">
+                    <p class="quote-text">“Progress can be quiet. Rest, ask questions, and take the next manageable step.”</p>
+                    <p class="quote-author">Doctor's care note · Supportive treatment conversations</p>
+                </div>
+
+                <div>
+                    <div class="section-heading">
+                        <div>
+                            <h3>Suggested Patient Messages</h3>
+                            <p>Dummy content for the future motivation library.</p>
+                        </div>
+                    </div>
+
+                    <div class="resource-grid">
+                        <article class="resource-card suggestion-card">
+                            <span class="resource-tag tag-guide">Treatment</span>
+                            <h4 class="resource-title">Focus on today's step</h4>
+                            <p class="resource-desc">You do not have to solve the whole journey today. Let us focus on the next appointment, the next question, and the next small act of care.</p>
+                            <p class="resource-meta">Suggested by Dr. Anura Perera · For treatment planning visits</p>
+                        </article>
+                        <article class="resource-card suggestion-card">
+                            <span class="resource-tag tag-article">Recovery</span>
+                            <h4 class="resource-title">Rest is part of treatment</h4>
+                            <p class="resource-desc">Rest is not falling behind. Your body is doing important work, and recovery time is a meaningful part of your care plan.</p>
+                            <p class="resource-meta">Suggested by Dr. Anura Perera · For post-treatment check-ins</p>
+                        </article>
+                        <article class="resource-card suggestion-card">
+                            <span class="resource-tag tag-story">Family Support</span>
+                            <h4 class="resource-title">Let people help specifically</h4>
+                            <p class="resource-desc">When someone asks how they can help, try giving one clear task: a ride, a meal, a call, or company during an appointment.</p>
+                            <p class="resource-meta">Suggested by Dr. Anura Perera · For caregiver conversations</p>
+                        </article>
+                        <article class="resource-card suggestion-card">
+                            <span class="resource-tag tag-video">Mindset</span>
+                            <h4 class="resource-title">Questions are a strength</h4>
+                            <p class="resource-desc">There is no wrong question about your treatment. Writing questions down before a visit can help you feel more prepared and heard.</p>
+                            <p class="resource-meta">Suggested by Dr. Anura Perera · For first consultations</p>
+                        </article>
+                        <article class="resource-card suggestion-card">
+                            <span class="resource-tag tag-guide">Nutrition</span>
+                            <h4 class="resource-title">Choose gentle consistency</h4>
+                            <p class="resource-desc">Small, regular meals and enough fluids can be a kinder goal than trying to eat perfectly while your body is healing.</p>
+                            <p class="resource-meta">Suggested by Dr. Anura Perera · For wellness guidance</p>
+                        </article>
+                        <article class="resource-card suggestion-card">
+                            <span class="resource-tag tag-article">Connection</span>
+                            <h4 class="resource-title">You are still you</h4>
+                            <p class="resource-desc">Treatment is one part of your life, not the whole of your identity. Make room for music, stories, people, and ordinary moments that feel like you.</p>
+                            <p class="resource-meta">Suggested by Dr. Anura Perera · For ongoing support</p>
+                        </article>
+                    </div>
+                </div>
+
+                <div class="card panel">
+                    <div class="section-heading">
+                        <div>
+                            <h3>Draft a New Suggestion</h3>
+                            <p>Static preview for the future publishing workflow.</p>
+                        </div>
+                    </div>
+                    <form class="draft-panel">
+                        <div class="form-field">
+                            <label for="suggestion-title">Title</label>
+                            <input id="suggestion-title" type="text" placeholder="e.g. One question at a time">
+                        </div>
+                        <div class="form-field">
+                            <label for="suggestion-theme">Theme</label>
+                            <select id="suggestion-theme">
+                                <option>Treatment</option>
+                                <option>Recovery</option>
+                                <option>Family Support</option>
+                                <option>Mindset</option>
+                            </select>
+                        </div>
+                        <div class="form-field form-field-wide">
+                            <label for="suggestion-message">Message</label>
+                            <textarea id="suggestion-message" placeholder="Write a short, supportive message for patients..."></textarea>
+                        </div>
+                        <p class="draft-note">Saving and publishing will be connected to the motivation resource database later.</p>
+                    </form>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>

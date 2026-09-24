@@ -11,7 +11,7 @@ if (isset($_SESSION['user_id'])) {
     switch ($role) {
         case 'patient': header("Location: modules/patient/views/patient_dashboard.php"); break;
         case 'doctor': header("Location: modules/doctor/views/doctor_dashboard.php"); break;
-        case 'staff': header("Location: modules/staff/views/dashboard.php"); break;
+        case 'staff': header("Location: modules/staff/views/staff_dashboard.php"); break;
         case 'pharmacist': header("Location: modules/pharmacist/views/dashboard.php"); break;
         case 'benefactor': header("Location: modules/benefactor/views/dashboard.php"); break;
         case 'admin': header("Location: modules/admin/views/admin_dashboard.php"); break;
@@ -68,10 +68,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 switch ($user['role']) {
                     case 'patient': header("Location: modules/patient/views/patient_dashboard.php"); break;
                     case 'doctor': header("Location: modules/doctor/views/doctor_dashboard.php"); break;
-                    case 'staff': header("Location: modules/staff/views/dashboard.php"); break;
+                    case 'staff': header("Location: modules/staff/views/staff_dashboard.php"); break;
                     case 'pharmacist': header("Location: modules/pharmacist/views/dashboard.php"); break;
                     case 'benefactor': header("Location: modules/benefactor/views/dashboard.php"); break;
-                    case 'admin': header("Location: modules/admin/views/dashboard.php"); break;
+                    case 'admin': header("Location: modules/admin/views/admin_dashboard.php"); break;
                     default: header("Location: index.php"); break;
                 }
                 exit();
@@ -439,6 +439,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         .form-footer p { font-size: 13px; color: var(--text-muted); }
         .form-footer a { color: var(--blue); font-weight: 600; transition: color .15s; }
         .form-footer a:hover { color: var(--blue-dark); text-decoration: underline; }
+        .home-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 4px;
+            padding: 10px 16px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--card);
+            text-decoration: none;
+        }
+        .home-link:hover { background: var(--bg); text-decoration: none !important; }
 
         /* ─────────────────────────────────────────
            RESPONSIVE
@@ -606,7 +618,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div class="form-footer">
                 <p><b>Forgot your password?</b> Please contact the Hospital Administration Desk at 071 1791923 or 
                     visit Room 43 for assistance. For security reasons, all password resets must be verified in person.</p>
-                
+                <a href="home.html" class="home-link">Back to Home</a>
             </div>
         </div>
     </div>

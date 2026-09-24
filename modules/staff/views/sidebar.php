@@ -8,7 +8,7 @@
  *     require __DIR__ . '/sidebar.php';
  *
  * $activePage values:
- *     dashboard | patients | register | appointments | reports | doctors | benefactor
+ *     dashboard | patients | register | appointments | reports | doctors | benefactor | profile
  *
  * Link ekak wenas karanna ona nam, methana witharak wenas karanna.
  */
@@ -23,6 +23,7 @@ $navItems = [
     'reports'      => ['medical_reports.php',     'icon-records',      'Medical Reports'],
     'doctors'      => ['doctor_availability.php', 'icon-doctor',       'Doctor Availability'],
     'benefactor'   => ['benefactor.php',          'icon-benefactor',   'Benefactor'],
+    'profile'      => ['staff_profile.php',       'icon-profile',      'My Profile'],
 ];
 ?>
 <style>

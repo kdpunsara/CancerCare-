@@ -1,8 +1,48 @@
 <?php
+session_start();
 require_once __DIR__ . '/../../../config/database.php';
 
 if (!$conn) {
     die("Database connection failed.");
+}
+
+$donation_requests = [];
+$pending_donations = 0;
+$received_donations = 0;
+$page_error = '';
+
+try {
+    $stats_result = $conn->query(
+        "SELECT
+            COUNT(CASE WHEN status = 'Pending Verification' THEN 1 END) AS pending_count,
+            COUNT(CASE WHEN status = 'Received' THEN 1 END) AS received_count
+         FROM Donation"
+    );
+    $donation_stats = $stats_result->fetch_assoc();
+    $pending_donations = (int)($donation_stats['pending_count'] ?? 0);
+    $received_donations = (int)($donation_stats['received_count'] ?? 0);
+
+    $requests_sql = "SELECT
+                        d.donation_id, d.donation_type, d.amount, d.currency,
+                        d.item_name, d.quantity, d.status, d.bank_slip_path,
+                        d.notes, d.created_at, d.received_date,
+                        b.first_name AS benefactor_first_name,
+                        b.last_name AS benefactor_last_name,
+                        b.organization_name,
+                        p.first_name AS patient_first_name,
+                        p.last_name AS patient_last_name,
+                        pn.title AS need_title
+                     FROM Donation d
+                     INNER JOIN Benefactor b ON b.user_id = d.benefactor_user_id
+                     LEFT JOIN Patient p ON p.user_id = d.patient_user_id
+                     LEFT JOIN PatientNeed pn ON pn.need_id = d.need_id
+                     ORDER BY
+                        CASE WHEN d.status = 'Pending Verification' THEN 0 ELSE 1 END,
+                        d.created_at DESC";
+    $requests_result = $conn->query($requests_sql);
+    $donation_requests = $requests_result->fetch_all(MYSQLI_ASSOC);
+} catch (Throwable $ex) {
+    $page_error = $ex->getMessage();
 }
 ?>
 <!DOCTYPE html>
@@ -169,6 +209,9 @@ if (!$conn) {
 <a href="benefactor.php" class="nav-item">
     <span class="icon icon-benefactor"></span> Benefactor
 </a>
+<a href="staff_profile.php" class="nav-item">
+    <span class="icon icon-profile"></span> My Profile
+</a>
 
         </nav>
 
@@ -228,17 +271,9 @@ if (!$conn) {
 
                 </div>
 
-                <button class="icon-btn">
-
-                    🔔
-
-                    <span class="dot"></span>
-
-                </button>
-
-                <button class="btn btn-outline">
+                <a href="../../../logout.php" class="btn btn-outline">
                     Sign Out
-                </button>
+                </a>
 
                 <button
                     class="sidebar-toggle"
@@ -254,6 +289,14 @@ if (!$conn) {
 
         <!-- CONTENT -->
         <div class="content">
+
+            <?php if (($_GET['msg'] ?? '') === 'donation_updated'): ?>
+                <div class="message">Donation request status updated successfully.</div>
+            <?php elseif (($_GET['msg'] ?? '') === 'error'): ?>
+                <div class="error-message"><?php echo htmlspecialchars($_GET['reason'] ?? 'Unable to update donation request.'); ?></div>
+            <?php elseif ($page_error !== ''): ?>
+                <div class="error-message">Unable to load benefactor requests.</div>
+            <?php endif; ?>
 
 
             <!-- SUMMARY -->
@@ -322,7 +365,7 @@ if (!$conn) {
                         </div>
 
                         <div class="kpi-value">
-                            4
+                            <?php echo $pending_donations; ?>
                         </div>
 
                         <div class="kpi-change up">
@@ -347,7 +390,7 @@ if (!$conn) {
                         </div>
 
                         <div class="kpi-value">
-                            2
+                            <?php echo $received_donations; ?>
                         </div>
 
                         <div class="kpi-change up">
@@ -745,6 +788,66 @@ if (!$conn) {
 
                         <tbody>
 
+                            <?php if (empty($donation_requests)): ?>
+                                <tr>
+                                    <td colspan="6" style="text-align:center;">No benefactor donation requests found.</td>
+                                </tr>
+                            <?php else: ?>
+                                <?php foreach ($donation_requests as $request): ?>
+                                    <?php
+                                    $patient_name = trim(($request['patient_first_name'] ?? '') . ' ' . ($request['patient_last_name'] ?? ''));
+                                    $benefactor_name = trim(($request['benefactor_first_name'] ?? '') . ' ' . ($request['benefactor_last_name'] ?? ''));
+                                    $organization = trim((string)($request['organization_name'] ?? ''));
+                                    $status_class = $request['status'] === 'Received'
+                                        ? 'active'
+                                        : ($request['status'] === 'Rejected' ? 'critical' : 'scheduled');
+                                    $slip_path = trim((string)($request['bank_slip_path'] ?? ''));
+                                    $slip_url = '';
+                                    if (preg_match('#^uploads/(bank_slips|bank-slips)/[A-Za-z0-9._-]+$#', $slip_path)) {
+                                        $slip_url = '../../../public/' . str_replace(' ', '%20', $slip_path);
+                                    }
+                                    ?>
+                                    <tr>
+                                        <td><?php echo htmlspecialchars($patient_name !== '' ? $patient_name : 'General Fund'); ?></td>
+                                        <td><?php echo htmlspecialchars($request['need_title'] ?? $request['donation_type']); ?></td>
+                                        <td>
+                                            <?php echo htmlspecialchars($benefactor_name); ?>
+                                            <?php if ($organization !== ''): ?>
+                                                <br><small><?php echo htmlspecialchars($organization); ?></small>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <?php if ($request['donation_type'] === 'Financial Aid'): ?>
+                                                <?php echo htmlspecialchars($request['currency'] ?? 'LKR'); ?>
+                                                <?php echo number_format((float)($request['amount'] ?? 0), 2); ?>
+                                            <?php else: ?>
+                                                <?php echo htmlspecialchars($request['item_name'] ?? $request['donation_type']); ?>
+                                                x<?php echo (int)($request['quantity'] ?? 0); ?>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td><span class="status-pill <?php echo $status_class; ?>"><?php echo htmlspecialchars($request['status']); ?></span></td>
+                                        <td>
+                                            <?php if ($slip_url !== ''): ?>
+                                                <a class="btn btn-outline btn-sm" href="<?php echo htmlspecialchars($slip_url); ?>" target="_blank" rel="noopener">View Slip</a>
+                                            <?php else: ?>
+                                                <span style="font-size:0.8rem; color:var(--gray-500);">No slip</span>
+                                            <?php endif; ?>
+
+                                            <?php if ($request['status'] === 'Pending Verification'): ?>
+                                                <form method="POST" action="medical_actions.php" style="display:inline-flex; gap:6px; margin-top:6px;">
+                                                    <input type="hidden" name="action" value="update_donation_status">
+                                                    <input type="hidden" name="donation_id" value="<?php echo (int)$request['donation_id']; ?>">
+                                                    <button class="btn btn-primary btn-sm" type="submit" name="status" value="Received">Accept</button>
+                                                    <button class="btn btn-outline btn-sm" type="submit" name="status" value="Rejected">Reject</button>
+                                                </form>
+                                            <?php endif; ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+
+                            <?php if (false): ?>
+
 
                             <tr>
 
@@ -863,6 +966,8 @@ if (!$conn) {
                                 </td>
 
                             </tr>
+
+                            <?php endif; ?>
 
                         </tbody>
 

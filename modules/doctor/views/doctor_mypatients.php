@@ -157,7 +157,7 @@ function calculateAge($dob) {
                                             <td><?php echo htmlspecialchars($pt['cancer_type']); ?></td>
                                             <td><?php echo htmlspecialchars($pt['stage']); ?></td>
                                             <td><?php echo date('M d, Y', strtotime($pt['last_visit'])); ?></td>
-                                            <td><a href="view_patient.php?id=<?php echo $pt['patient_user_id']; ?>" class="link-action">View</a></td>
+                                            <td><a href="view_records.php?patient=<?php echo $pt['patient_user_id']; ?>" class="link-action">View</a></td>
                                         </tr>
                                     <?php endforeach; ?>
                                 <?php endif; ?>

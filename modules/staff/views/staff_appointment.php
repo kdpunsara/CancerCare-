@@ -89,8 +89,11 @@ try {
             a.doctor_user_id,
             a.appointment_date,
             a.appointment_time,
-            a.type,
-            a.status,
+            a.reason AS type,
+            CASE
+                WHEN a.appointment_date < CURDATE() THEN 'completed'
+                ELSE 'pending'
+            END AS status,
 
             CONCAT(
                 p.first_name,
@@ -499,24 +502,30 @@ $reason = $_GET['reason'] ?? '';
 
             z-index: 9999;
 
-            left: 0;
-            top: 0;
+            inset: 0;
 
             width: 100%;
             height: 100%;
+            max-width: none;
+            max-height: none;
 
             background: rgba(15, 23, 42, 0.55);
 
-            align-items: center;
-            justify-content: center;
+            place-items: center;
 
             padding: 20px;
+
+            overflow: hidden;
+
+            border-radius: 0;
+            box-shadow: none;
+            transform: none;
         }
 
 
         .modal.show {
 
-            display: flex;
+            display: grid;
         }
 
 
@@ -526,9 +535,11 @@ $reason = $_GET['reason'] ?? '';
 
             max-width: 600px;
 
-            max-height: 92vh;
+            max-height: min(760px, calc(100vh - 40px));
 
             overflow-y: auto;
+
+            scrollbar-gutter: stable;
 
             background: white;
 
@@ -537,6 +548,8 @@ $reason = $_GET['reason'] ?? '';
             padding: 28px;
 
             box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+
+            box-sizing: border-box;
         }
 
 
@@ -843,6 +856,14 @@ $reason = $_GET['reason'] ?? '';
 
             </a>
 
+            <a
+                href="staff_profile.php"
+                class="nav-item"
+            >
+                <span class="icon icon-profile"></span>
+                My Profile
+            </a>
+
 
         </nav>
 
@@ -900,24 +921,11 @@ $reason = $_GET['reason'] ?? '';
 
             <div class="topbar-right">
 
-                <button
-                    class="icon-btn notif-btn"
-                    title="Notifications"
-                    type="button"
-                >
-                    🔔
-
-                    <span class="dot"></span>
-
-                </button>
-
-
-                <button
+                <a href="../../../logout.php"
                     class="btn btn-outline"
-                    type="button"
                 >
                     Sign Out
-                </button>
+                </a>
 
 
                 <button

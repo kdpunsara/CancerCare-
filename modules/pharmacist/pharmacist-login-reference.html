@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In - CancerCare</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .login-wrap {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(180deg, var(--navy) 0%, var(--navy-soft) 100%);
+            padding: 20px;
+        }
+        .login-card {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            width: 100%;
+            max-width: 400px;
+            padding: 36px 32px;
+        }
+        .login-logo {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        .login-logo img {
+            width: 56px; height: 56px; border-radius: 12px;
+        }
+        .login-logo h1 { font-size: 1.2rem; font-weight: 800; }
+        .login-logo p { font-size: 0.8rem; color: var(--gray-500); }
+        .login-footer-note {
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--gray-500);
+            margin-top: 18px;
+        }
+        .login-footer-note a { color: var(--primary); font-weight: 600; }
+        .form-check { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--gray-600); }
+    </style>
+</head>
+<body>
+
+<div class="login-wrap">
+    <div class="login-card">
+        <div class="login-logo">
+            <img src="logo.jpeg" alt="CancerCare logo">
+            <h1>CancerCare</h1>
+            <p>Pharmacy Module &mdash; Staff Sign In</p>
+        </div>
+
+        <form class="pure-form" action="dashboard.html" method="GET">
+            <div class="form-group">
+                <label for="login-id">Staff ID or Email <span class="req">*</span></label>
+                <input type="text" id="login-id" placeholder="e.g., STF-CANCER-992" required>
+            </div>
+
+            <div class="form-group">
+                <label for="login-pwd">Password <span class="req">*</span></label>
+                <input type="password" id="login-pwd" placeholder="••••••••" required>
+            </div>
+
+            <div style="display:flex; justify-content: space-between; align-items:center;">
+                <label class="form-check">
+                    <input type="checkbox" id="remember-me"> Remember me
+                </label>
+                <a href="help.html" style="font-size: 0.8rem; color: var(--primary); font-weight: 600;">Forgot password?</a>
+            </div>
+
+            <div class="form-actions-inline" style="justify-content: stretch;">
+                <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">Sign In</button>
+            </div>
+        </form>
+
+        <p class="login-footer-note">Need help accessing your account? <a href="help.html">Contact support</a></p>
+    </div>
+</div>
+
+</body>
+</html>

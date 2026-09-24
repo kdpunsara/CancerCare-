@@ -98,6 +98,7 @@ $reminders = $stmt->get_result();
           <span class="icon icon-bell" aria-hidden="true"></span>
           <span class="dot"></span>
         </button>
+        <a href="../../../logout.php" class="signout-btn">Sign Out</a>
       </div>
     </header>
 

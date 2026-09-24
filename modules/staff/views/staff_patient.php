@@ -297,7 +297,7 @@ try {
 
 
             <a
-                href="medical_reports.html"
+                href="medical_reports.php"
                 class="nav-item"
             >
 
@@ -309,7 +309,7 @@ try {
 
 
             <a
-                href="doctor_availability.html"
+                href="doctor_availability.php"
                 class="nav-item"
             >
 
@@ -321,13 +321,24 @@ try {
 
 
             <a
-                href="benefactor.html"
+                href="benefactor.php"
                 class="nav-item"
             >
 
                 <span class="icon icon-benefactor"></span>
 
                 Benefactor
+
+            </a>
+
+            <a
+                href="staff_profile.php"
+                class="nav-item"
+            >
+
+                <span class="icon icon-profile"></span>
+
+                My Profile
 
             </a>
 
@@ -402,21 +413,11 @@ try {
                 </form>
 
 
-                <button
-                    type="button"
-                    class="icon-btn notif-btn"
-                    title="Notifications"
-                >
-                    🔔
-                </button>
-
-
-                <button
-                    type="button"
+                <a href="../../../logout.php"
                     class="btn btn-outline"
                 >
                     Sign Out
-                </button>
+                </a>
 
 
                 <button

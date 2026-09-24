@@ -90,6 +90,7 @@ require_once __DIR__ . '/../patient_data.php';
           <span class="icon icon-bell" aria-hidden="true"></span>
           <span class="dot"></span>
         </button>
+        <a href="../../../logout.php" class="signout-btn">Sign Out</a>
       </div>
     </header>
 

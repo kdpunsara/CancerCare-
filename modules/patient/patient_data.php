@@ -68,8 +68,9 @@ $medical_records = patient_query_rows($conn,
      ORDER BY r.record_date DESC", $patient_id);
 
 $medical_reports = patient_query_rows($conn,
-    "SELECT report_id, report_type, report_title, file_path, upload_date, notes
-     FROM MedicalReport WHERE patient_user_id = ? ORDER BY upload_date DESC", $patient_id);
+    "SELECT report_id, report_type, report_title, file_path,
+            uploaded_at AS upload_date, report_details AS notes
+     FROM MedicalReport WHERE patient_user_id = ? ORDER BY uploaded_at DESC", $patient_id);
 
 $prescriptions = patient_query_rows($conn,
     "SELECT p.prescription_id, p.prescription_date, p.status, p.diagnosis_notes,

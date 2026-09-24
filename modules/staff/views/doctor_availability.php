@@ -479,6 +479,9 @@ function doctorAvailableToday($days, $today)
 <a href="benefactor.php" class="nav-item">
     <span class="icon icon-benefactor"></span> Benefactor
 </a>
+<a href="staff_profile.php" class="nav-item">
+    <span class="icon icon-profile"></span> My Profile
+</a>
 
     </nav>
 
@@ -565,12 +568,11 @@ function doctorAvailableToday($days, $today)
         </button>
 
 
-        <button
+        <a href="../../../logout.php"
             class="btn btn-outline"
-            type="button"
         >
             Sign Out
-        </button>
+        </a>
 
 
         <button

@@ -39,6 +39,15 @@ switch ($action) {
         deleteAppointment($conn);
         break;
 
+    // ---------- BENEFACTOR DONATIONS ----------
+    case 'update_donation_status':
+        updateDonationStatus($conn);
+        break;
+
+    case 'update_staff_profile':
+        updateStaffProfile($conn);
+        break;
+
     default:
         header("Location: staff_dashboard.php");
         exit;
@@ -75,6 +84,21 @@ function backToAppointments($msg, $reason = '') {
         $url .= '&reason=' . urlencode($reason);
     }
     header("Location: " . $url);
+    exit;
+}
+
+// Benefactor requests page ekata message ekak ekka yawanna
+function backToBenefactor($msg, $reason = '') {
+    $url = 'benefactor.php?msg=' . urlencode($msg);
+    if ($reason !== '') {
+        $url .= '&reason=' . urlencode($reason);
+    }
+    header("Location: " . $url);
+    exit;
+}
+
+function backToStaffProfile($query) {
+    header("Location: staff_profile.php?" . $query);
     exit;
 }
 
@@ -366,7 +390,7 @@ function deletePatient($conn) {
 // ==========================================
 // CREATE APPOINTMENT
 // Appointment(appointment_id, patient_user_id, doctor_user_id, staff_user_id,
-//             appointment_date, appointment_time, type, status)
+//             appointment_date, appointment_time, reason)
 // ==========================================
 function createAppointment($conn) {
 
@@ -439,7 +463,7 @@ function createAppointment($conn) {
         $stmt = $conn->prepare(
             "SELECT appointment_id FROM `Appointment`
               WHERE doctor_user_id = ? AND appointment_date = ?
-                AND appointment_time = ? AND status <> 'cancelled'"
+                                AND appointment_time = ?"
         );
         $stmt->bind_param("iss", $doctor_id, $appointment_date, $appointment_time);
         $stmt->execute();
@@ -461,13 +485,13 @@ function createAppointment($conn) {
         $stmt = $conn->prepare(
             "INSERT INTO `Appointment`
                 (appointment_id, patient_user_id, doctor_user_id, staff_user_id,
-                 appointment_date, appointment_time, type, status)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+                 appointment_date, appointment_time, reason)
+             VALUES (?, ?, ?, ?, ?, ?, ?)"
         );
         $stmt->bind_param(
-            "iiiissss",
+            "iiiisss",
             $appointmentId, $patient_id, $doctor_id, $staff_id,
-            $appointment_date, $appointment_time, $type, $status
+            $appointment_date, $appointment_time, $type
         );
         $stmt->execute();
         $stmt->close();
@@ -527,6 +551,113 @@ function deleteAppointment($conn) {
             );
         }
         backToAppointments('error', 'Appointment delete failed: ' . $e->getMessage());
+    }
+}
+
+
+// ==========================================
+// UPDATE BENEFACTOR DONATION STATUS
+// ==========================================
+function updateDonationStatus($conn) {
+
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        header("Location: benefactor.php");
+        exit;
+    }
+
+    if (($_SESSION['role'] ?? '') !== 'staff') {
+        header("Location: ../../../login.php");
+        exit;
+    }
+
+    $donation_id = (int)($_POST['donation_id'] ?? 0);
+    $status = $_POST['status'] ?? '';
+    $staff_id = (int)($_SESSION['user_id'] ?? 0);
+
+    if ($donation_id <= 0 || !in_array($status, ['Received', 'Rejected'], true)) {
+        backToBenefactor('error', 'Invalid donation status request.');
+    }
+
+    if ($staff_id <= 0) {
+        $staff_id = currentStaffId($conn);
+    }
+
+    if ($staff_id <= 0) {
+        backToBenefactor('error', 'No staff user could be identified.');
+    }
+
+    try {
+        if ($status === 'Received') {
+            $stmt = $conn->prepare(
+                "UPDATE Donation
+                 SET status = ?, received_by_staff_id = ?, received_date = CURDATE()
+                 WHERE donation_id = ? AND status = 'Pending Verification'"
+            );
+        } else {
+            $stmt = $conn->prepare(
+                "UPDATE Donation
+                 SET status = ?, received_by_staff_id = ?, received_date = NULL
+                 WHERE donation_id = ? AND status = 'Pending Verification'"
+            );
+        }
+
+        $stmt->bind_param("sii", $status, $staff_id, $donation_id);
+        $stmt->execute();
+
+        if ($stmt->affected_rows === 0) {
+            backToBenefactor('error', 'Donation request was not found or is already updated.');
+        }
+
+        backToBenefactor('donation_updated');
+    } catch (Throwable $e) {
+        backToBenefactor('error', 'Could not update donation request: ' . $e->getMessage());
+    }
+}
+
+
+// ==========================================
+// UPDATE STAFF PROFILE
+// ==========================================
+function updateStaffProfile($conn) {
+
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST' || ($_SESSION['role'] ?? '') !== 'staff') {
+        header("Location: ../../../login.php");
+        exit;
+    }
+
+    $staff_id = (int)($_SESSION['user_id'] ?? 0);
+    $phone = trim($_POST['phone'] ?? '');
+    $password = $_POST['password'] ?? '';
+    $confirm_password = $_POST['confirm_password'] ?? '';
+
+    if ($staff_id <= 0) {
+        header("Location: ../../../logout.php");
+        exit;
+    }
+
+    if ($password !== '' && strlen($password) < 6) {
+        backToStaffProfile('error=short_password');
+    }
+
+    if ($password !== $confirm_password) {
+        backToStaffProfile('error=password_mismatch');
+    }
+
+    try {
+        if ($password !== '') {
+            $password_hash = password_hash($password, PASSWORD_DEFAULT);
+            $stmt = $conn->prepare("UPDATE User SET phone = ?, password_hash = ? WHERE user_id = ? AND role = 'staff'");
+            $stmt->bind_param("ssi", $phone, $password_hash, $staff_id);
+        } else {
+            $stmt = $conn->prepare("UPDATE User SET phone = ? WHERE user_id = ? AND role = 'staff'");
+            $stmt->bind_param("si", $phone, $staff_id);
+        }
+
+        $stmt->execute();
+        backToStaffProfile('msg=profile_updated');
+    } catch (Throwable $e) {
+        error_log("Staff Profile Update Error: " . $e->getMessage());
+        backToStaffProfile('error=update_failed');
     }
 }
 ?>
