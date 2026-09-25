@@ -161,34 +161,48 @@ require_once __DIR__ . '/../patient_data.php';
         </div>
         <p class="table-caption">Approximate inter-city bus timings for patients travelling to the hospital in Maharagama. Times may vary with traffic and road conditions.</p>
 
-        <form class="search-bar" action="patient_transport.php" method="get">
+        <form class="search-bar" action="patient_transport.php#bus-results" method="get">
           <div class="search-field">
             <span class="icon icon-search" aria-hidden="true"></span>
-            <input type="text" name="q" placeholder="Search by city or route, e.g. Kandy…">
+            <input type="search" name="q" value="<?= htmlspecialchars($transport_search) ?>" placeholder="Search buses by city or route..." aria-label="Search buses by city or route">
           </div>
           <button type="submit" class="search-btn">Search</button>
         </form>
 
-        <div class="table-wrap">
+        <?php if ($transport_search !== ''): ?>
+          <p class="search-result-note">
+            Showing buses matching <strong><?= htmlspecialchars($transport_search) ?></strong>.
+            <a href="patient_transport.php">Clear search</a>
+          </p>
+        <?php endif; ?>
+
+        <div class="table-wrap" id="bus-results">
           <table class="data-table">
             <thead>
               <tr>
                 <th>Route</th>
-                <th>Start Time</th>
-                <th>Arrival Time</th>
-                <th>Duration</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Departure</th>
+                <th>Arrival</th>
                 <th>Bus Type</th>
-                <th>Frequency</th>
+                <th>Days</th>
               </tr>
             </thead>
             <tbody>
+              <?php if (count($transport_schedules) === 0): ?>
+                <tr>
+                  <td colspan="7" class="empty-state">No buses found for this city or route.</td>
+                </tr>
+              <?php endif; ?>
               <?php foreach ($transport_schedules as $schedule): ?>
                 <tr>
                   <td class="med-name"><?= htmlspecialchars($schedule['route_name']) ?></td>
+                  <td><?= htmlspecialchars($schedule['departure_location']) ?></td>
+                  <td><?= htmlspecialchars($schedule['arrival_location']) ?></td>
                   <td><?= htmlspecialchars(date('g:i A', strtotime($schedule['departure_time']))) ?></td>
                   <td><?= htmlspecialchars(date('g:i A', strtotime($schedule['arrival_time']))) ?></td>
-                  <td><?= htmlspecialchars($schedule['vehicle_type']) ?></td>
-                  <td><?= (int) $schedule['capacity'] ?></td>
+                  <td><?= htmlspecialchars($schedule['vehicle_type']) ?> (<?= (int) $schedule['capacity'] ?> seats)</td>
                   <td><?= htmlspecialchars($schedule['operating_days']) ?></td>
                 </tr>
               <?php endforeach; ?>

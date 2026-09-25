@@ -93,7 +93,28 @@ $motivation_resources = patient_query_rows($conn,
     "SELECT resource_id, title, content_type, content_url, description, category, published_date
      FROM MotivationResource WHERE is_active = TRUE ORDER BY published_date DESC, resource_id DESC", null);
 
-$transport_schedules = patient_query_rows($conn,
-    "SELECT schedule_id, route_name, departure_location, arrival_location,
-            departure_time, arrival_time, vehicle_type, capacity, operating_days
-     FROM TransportSchedule WHERE status = 'active' ORDER BY departure_time", null);
+$transport_search = isset($_GET['q']) ? trim((string) $_GET['q']) : '';
+
+if ($transport_search !== '') {
+    $transport_stmt = $conn->prepare(
+        "SELECT schedule_id, route_name, departure_location, arrival_location,
+                departure_time, arrival_time, vehicle_type, capacity, operating_days
+         FROM TransportSchedule
+         WHERE status = 'active'
+           AND (departure_location LIKE ? OR arrival_location LIKE ? OR route_name LIKE ?)
+         ORDER BY departure_time"
+    );
+    $transport_term = '%' . $transport_search . '%';
+    $transport_stmt->bind_param('sss', $transport_term, $transport_term, $transport_term);
+    $transport_stmt->execute();
+    $transport_result = $transport_stmt->get_result();
+    $transport_schedules = array();
+    while ($transport_row = $transport_result->fetch_assoc()) {
+        $transport_schedules[] = $transport_row;
+    }
+} else {
+    $transport_schedules = patient_query_rows($conn,
+        "SELECT schedule_id, route_name, departure_location, arrival_location,
+                departure_time, arrival_time, vehicle_type, capacity, operating_days
+         FROM TransportSchedule WHERE status = 'active' ORDER BY departure_time", null);
+}

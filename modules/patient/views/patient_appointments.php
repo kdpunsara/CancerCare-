@@ -152,7 +152,7 @@ $reminders = $stmt->get_result();
           <?php foreach ($appointments as $appointment): ?>
             <?php if ($appointment['appointment_status'] !== 'upcoming') { continue; } ?>
             <li class="appointment-item confirmed">
-              <div class="appointment-time"><span class="time"><?= htmlspecialchars(date('H:i', strtotime($appointment['appointment_time']))) ?></span><span class="date"><?= htmlspecialchars(date('M j, Y', strtotime($appointment['appointment_date']))) ?></span></div>
+              <div class="appointment-time"><span class="time"><?= htmlspecialchars(date('g:i A', strtotime($appointment['appointment_time']))) ?></span><span class="date"><?= htmlspecialchars(date('M j, Y', strtotime($appointment['appointment_date']))) ?></span></div>
               <div class="appointment-info">
                 <p class="appointment-name"><?= htmlspecialchars($appointment['reason'] ?: 'Appointment') ?></p>
                 <p class="appointment-desc"><?= htmlspecialchars('Dr. ' . $appointment['doctor_first_name'] . ' ' . $appointment['doctor_last_name']) ?></p>
@@ -174,7 +174,7 @@ $reminders = $stmt->get_result();
           <?php foreach ($appointments as $appointment): ?>
             <?php if ($appointment['appointment_status'] !== 'completed') { continue; } ?>
             <li class="appointment-item completed">
-              <div class="appointment-time"><span class="time"><?= htmlspecialchars(date('H:i', strtotime($appointment['appointment_time']))) ?></span><span class="date"><?= htmlspecialchars(date('M j, Y', strtotime($appointment['appointment_date']))) ?></span></div>
+              <div class="appointment-time"><span class="time"><?= htmlspecialchars(date('g:i A', strtotime($appointment['appointment_time']))) ?></span><span class="date"><?= htmlspecialchars(date('M j, Y', strtotime($appointment['appointment_date']))) ?></span></div>
               <div class="appointment-info">
                 <p class="appointment-name"><?= htmlspecialchars($appointment['reason'] ?: 'Appointment') ?></p>
                 <p class="appointment-desc"><?= htmlspecialchars('Dr. ' . $appointment['doctor_first_name'] . ' ' . $appointment['doctor_last_name']) ?></p>
