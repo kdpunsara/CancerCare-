@@ -136,6 +136,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header("Location: views/benefactor_profile.php?error=update_failed");
             exit();
         }
+    } elseif ($action === 'delete_donation') {
+        if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'benefactor') {
+            header("Location: ../../login.php");
+            exit();
+        }
+
+        $benefactor_id = (int) $_SESSION['user_id'];
+        $donation_id = (int) ($_POST['donation_id'] ?? 0);
+
+        if ($donation_id <= 0) {
+            header("Location: views/donation_history.php?error=donation_not_pending");
+            exit();
+        }
+
+        $stmt_donation = $conn->prepare(
+            "SELECT bank_slip_path
+             FROM Donation
+             WHERE donation_id = ?
+               AND benefactor_user_id = ?
+               AND status = 'Pending Verification'"
+        );
+        $stmt_donation->bind_param("ii", $donation_id, $benefactor_id);
+        $stmt_donation->execute();
+        $donation = $stmt_donation->get_result()->fetch_assoc();
+
+        if (!$donation) {
+            header("Location: views/donation_history.php?error=donation_not_pending");
+            exit();
+        }
+
+        $stmt_delete = $conn->prepare(
+            "DELETE FROM Donation
+             WHERE donation_id = ?
+               AND benefactor_user_id = ?
+               AND status = 'Pending Verification'"
+        );
+        $stmt_delete->bind_param("ii", $donation_id, $benefactor_id);
+        $stmt_delete->execute();
+
+        if ($stmt_delete->affected_rows === 1 && !empty($donation['bank_slip_path'])) {
+            $slip_path = __DIR__ . '/../../public/' . ltrim($donation['bank_slip_path'], '/');
+            if (is_file($slip_path)) {
+                unlink($slip_path);
+            }
+        }
+
+        header("Location: views/donation_history.php?msg=donation_deleted");
+        exit();
     } elseif ($action === 'submit_donation') {
         if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'benefactor') {
             header("Location: ../../login.php");

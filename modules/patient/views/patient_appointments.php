@@ -40,7 +40,7 @@ $reminders = $stmt->get_result();
           <span class="icon icon-dashboard" aria-hidden="true"></span>
           <span class="nav-text">My Dashboard</span>
         </a></li>
-        <li><a href="patient_profile.php" class="nav-item" title="My Profile">
+        <li><a href="patient_profile_edit.php" class="nav-item" title="My Profile">
           <span class="icon icon-profile" aria-hidden="true"></span>
           <span class="nav-text">My Profile</span>
         </a></li>
@@ -94,10 +94,6 @@ $reminders = $stmt->get_result();
         </div>
       </div>
       <div class="topbar-actions">
-        <button class="icon-btn" aria-label="Notifications">
-          <span class="icon icon-bell" aria-hidden="true"></span>
-          <span class="dot"></span>
-        </button>
         <a href="../../../logout.php" class="signout-btn">Sign Out</a>
       </div>
     </header>

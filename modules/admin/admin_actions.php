@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || isset($_GET['action'])) {
             $first_name = trim($_POST['first_name'] ?? '');
             $last_name  = trim($_POST['last_name'] ?? '');
 
-            if ($role === 'benefactor') {
+            if (in_array($role, ['patient', 'benefactor'], true)) {
                 header("Location: views/user_management.php?add=1&add_role=doctor&error=role_not_allowed");
                 exit();
             }
@@ -171,18 +171,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || isset($_GET['action'])) {
                     $gender = $_POST['gender'] ?? 'other';
                     $address = trim($_POST['address'] ?? '');
                     $city = trim($_POST['city'] ?? '');
-                    $blood_group = trim($_POST['blood_group'] ?? '');
-                    $allergies = trim($_POST['allergies'] ?? '');
                     $age = ($_POST['age'] ?? '') !== '' ? intval($_POST['age']) : null;
                     $emergency_contact = trim($_POST['emergency_contact'] ?? '');
-                    $cancer_type = trim($_POST['cancer_type'] ?? '');
-                    $stage = trim($_POST['stage'] ?? '');
                     $assigned_doctor = trim($_POST['assigned_doctor'] ?? '');
-                    $treatment_plan = trim($_POST['treatment_plan'] ?? '');
                     $patient_status = $_POST['patient_status'] ?? 'active';
                     if (!in_array($patient_status, ['active', 'scheduled', 'stable'], true)) {
                         $patient_status = 'active';
                     }
+
+                    $stmt_medical = $conn->prepare(
+                        "SELECT blood_group, allergies, cancer_type, stage, treatment_plan
+                         FROM Patient WHERE user_id = ?"
+                    );
+                    $stmt_medical->bind_param("i", $user_id);
+                    $stmt_medical->execute();
+                    $medical_data = $stmt_medical->get_result()->fetch_assoc();
+                    if (!$medical_data) {
+                        throw new Exception('Patient record not found.');
+                    }
+                    $blood_group = $medical_data['blood_group'];
+                    $allergies = $medical_data['allergies'];
+                    $cancer_type = $medical_data['cancer_type'];
+                    $stage = $medical_data['stage'];
+                    $treatment_plan = $medical_data['treatment_plan'];
+
                     $stmt_profile = $conn->prepare("UPDATE Patient SET nic = ?, first_name = ?, last_name = ?, dob = ?, gender = ?, address = ?, city = ?, blood_group = ?, allergies = ?, age = ?, emergency_contact = ?, cancer_type = ?, stage = ?, assigned_doctor = ?, treatment_plan = ?, status = ? WHERE user_id = ?");
                     $stmt_profile->bind_param(str_repeat('s', 9) . 'i' . str_repeat('s', 6) . 'i', $nic, $first_name, $last_name, $dob, $gender, $address, $city, $blood_group, $allergies, $age, $emergency_contact, $cancer_type, $stage, $assigned_doctor, $treatment_plan, $patient_status, $user_id);
                 } elseif ($role === 'staff') {

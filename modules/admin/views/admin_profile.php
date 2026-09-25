@@ -69,6 +69,10 @@ $profile['admin_level'] = $profile['admin_level'] ?? 'regular';
                         <input type="hidden" name="action" value="update_admin_profile">
 
                         <div class="form-field">
+                            <label>User ID</label>
+                            <input type="text" value="<?php echo (int) $admin_id; ?>" readonly>
+                        </div>
+                        <div class="form-field">
                             <label>Username</label>
                             <input type="text" value="<?php echo htmlspecialchars($profile['username']); ?>" disabled>
                         </div>

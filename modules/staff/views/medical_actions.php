@@ -10,6 +10,11 @@ error_reporting(E_ALL);
 
 session_start();
 
+if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'staff') {
+    header("Location: ../../../login.php");
+    exit();
+}
+
 // DB connection eka
 require_once __DIR__ . '/../../../config/database.php';
 

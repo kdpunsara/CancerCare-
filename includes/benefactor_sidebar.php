@@ -1,5 +1,7 @@
 <?php
 $current_page = $current_page ?? 'dashboard';
+$role_display = $role_display
+    ?? (isset($profile['benefactor_type']) ? ucfirst($profile['benefactor_type']) . ' Benefactor' : 'Benefactor');
 ?>
 <aside class="sidebar">
     <div class="brand">

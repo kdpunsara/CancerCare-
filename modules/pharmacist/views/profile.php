@@ -53,7 +53,7 @@ $form = [
                     <?php $ro = 'background-color: var(--gray-100); color: var(--gray-500);'; ?>
                     <div class="form-grid cols-2">
                         <div class="form-group">
-                            <label for="user-id">Pharmacist ID</label>
+                            <label for="user-id">User ID</label>
                             <input type="text" id="user-id" value="<?php echo (int) $pharmacist_id; ?>" disabled style="<?php echo $ro; ?>">
                         </div>
                         <div class="form-group">

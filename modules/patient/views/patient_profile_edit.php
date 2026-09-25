@@ -1,6 +1,8 @@
 <?php
 require_once __DIR__ . '/../patient_data.php';
 $full_name = trim($patient['first_name'].' '.$patient['last_name']);
+$profile_message = $_GET['msg'] ?? '';
+$profile_error = $_GET['error'] ?? '';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -31,7 +33,7 @@ $full_name = trim($patient['first_name'].' '.$patient['last_name']);
           <span class="icon icon-dashboard" aria-hidden="true"></span>
           <span class="nav-text">My Dashboard</span>
         </a></li>
-        <li><a href="patient_profile.php" class="nav-item active" title="My Profile">
+        <li><a href="patient_profile_edit.php" class="nav-item active" title="My Profile">
           <span class="icon icon-profile" aria-hidden="true"></span>
           <span class="nav-text">My Profile</span>
         </a></li>
@@ -85,10 +87,6 @@ $full_name = trim($patient['first_name'].' '.$patient['last_name']);
         </div>
       </div>
       <div class="topbar-actions">
-        <button class="icon-btn" aria-label="Notifications">
-          <span class="icon icon-bell" aria-hidden="true"></span>
-          <span class="dot"></span>
-        </button>
         <a href="../../../logout.php" class="signout-btn">Sign Out</a>
       </div>
     </header>
@@ -99,11 +97,25 @@ $full_name = trim($patient['first_name'].' '.$patient['last_name']);
         <h3 class="form-title">Edit Profile</h3>
         <p class="form-subtitle">Update your personal and contact information. Medical information can only be changed by your care team.</p>
 
+        <?php if ($profile_message === 'profile_updated'): ?>
+          <p class="form-subtitle" style="color: var(--teal);">Profile updated successfully.</p>
+        <?php elseif ($profile_error === 'password_short'): ?>
+          <p class="form-subtitle" style="color: var(--red);">Password must be at least 8 characters long.</p>
+        <?php elseif ($profile_error === 'password_mismatch'): ?>
+          <p class="form-subtitle" style="color: var(--red);">The passwords do not match.</p>
+        <?php elseif ($profile_error !== ''): ?>
+          <p class="form-subtitle" style="color: var(--red);">Could not update your profile. Please check the values and try again.</p>
+        <?php endif; ?>
+
         <form class="app-form" action="../patient_actions.php" method="post">
 <input type="hidden" name="action" value="update_profile">
 
           <p class="form-section-label">Personal Information</p>
           <div class="form-grid">
+            <div class="form-field">
+              <label for="user-id">User ID</label>
+              <input type="text" id="user-id" value="<?= (int) $patient['user_id'] ?>" readonly>
+            </div>
             <div class="form-field">
               <label for="fullname">Full Name</label>
                 <input type="text" id="fullname" name="full_name" value="<?= htmlspecialchars($full_name) ?>" required>
@@ -154,8 +166,20 @@ $full_name = trim($patient['first_name'].' '.$patient['last_name']);
             </div>
           </div>
 
+          <p class="form-section-label">Change Password</p>
+          <div class="form-grid">
+            <div class="form-field">
+              <label for="password">New Password</label>
+              <input type="password" id="password" name="password" minlength="8" placeholder="Leave blank to keep your current password">
+            </div>
+            <div class="form-field">
+              <label for="confirm-password">Confirm New Password</label>
+              <input type="password" id="confirm-password" name="confirm_password" minlength="8" placeholder="Repeat your new password">
+            </div>
+          </div>
+
           <div class="form-actions">
-            <a href="patient_profile.php" class="btn-secondary">Cancel</a>
+            <a href="patient_dashboard.php" class="btn-secondary">Cancel</a>
             <button type="submit" class="btn-primary">Save Changes</button>
           </div>
 

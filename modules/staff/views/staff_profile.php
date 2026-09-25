@@ -9,7 +9,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'staff') {
 
 $staff_id = (int) $_SESSION['user_id'];
 $stmt = $conn->prepare(
-    "SELECT u.username, u.email, u.phone,
+    "SELECT u.user_id, u.username, u.email, u.phone,
             s.first_name, s.last_name, s.designation, s.department, s.employee_id
      FROM User u
      INNER JOIN Medical_Staff s ON s.user_id = u.user_id
@@ -119,6 +119,10 @@ $error_message = $error_messages[$_GET['error'] ?? ''] ?? '';
                 <form method="POST" action="medical_actions.php" class="profile-form">
                     <input type="hidden" name="action" value="update_staff_profile">
 
+                    <div class="form-group">
+                        <label for="user_id">User ID</label>
+                        <input id="user_id" class="form-control" type="text" value="<?php echo (int) $profile['user_id']; ?>" readonly>
+                    </div>
                     <div class="form-group">
                         <label for="username">Username</label>
                         <input id="username" class="form-control" type="text" value="<?php echo htmlspecialchars($profile['username']); ?>" readonly>

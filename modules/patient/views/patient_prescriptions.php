@@ -1,5 +1,22 @@
 <?php
 require_once __DIR__ . '/../patient_data.php';
+
+$prescription_groups = [];
+foreach ($prescriptions as $prescription) {
+  $prescription_id = (int) $prescription['prescription_id'];
+
+  if (!isset($prescription_groups[$prescription_id])) {
+    $prescription_groups[$prescription_id] = [
+      'prescription_id' => $prescription_id,
+      'prescription_date' => $prescription['prescription_date'],
+      'status' => $prescription['status'],
+      'doctor_name' => 'Dr. ' . $prescription['doctor_first_name'] . ' ' . $prescription['doctor_last_name'],
+      'items' => []
+    ];
+  }
+
+  $prescription_groups[$prescription_id]['items'][] = $prescription;
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -9,6 +26,47 @@ require_once __DIR__ . '/../patient_data.php';
 <title>Prescriptions — Apeksha OncoCare</title>
 <link rel="stylesheet" href="../../../public/css/base.css?v=3">
 <link rel="stylesheet" href="../../../public/css/prescription.css">
+<style>
+  .prescription-table th,
+  .prescription-table td { white-space: nowrap; }
+  .view-prescription-btn {
+    border: 0;
+    border-radius: 6px;
+    background: var(--blue);
+    color: #fff;
+    cursor: pointer;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 8px 12px;
+  }
+  .prescription-modal {
+    background: rgba(16, 26, 51, .55);
+    display: none;
+    inset: 0;
+    padding: 24px 16px;
+    position: fixed;
+    z-index: 20;
+  }
+  .prescription-modal.open { display: flex; align-items: center; justify-content: center; }
+  .prescription-modal-card {
+    background: var(--card, #fff);
+    border-radius: var(--radius-lg, 12px);
+    max-height: 85vh;
+    max-width: 720px;
+    overflow-y: auto;
+    padding: 24px;
+    position: relative;
+    width: 100%;
+  }
+  .prescription-modal-head { align-items: flex-start; display: flex; justify-content: space-between; }
+  .prescription-modal-head h3 { margin: 0 0 6px; }
+  .prescription-modal-meta { color: var(--text-muted, #6b7280); font-size: 13px; margin: 0 0 18px; }
+  .prescription-modal-close { background: transparent; border: 0; cursor: pointer; font-size: 24px; line-height: 1; }
+  .medication-detail { border-top: 1px solid var(--border, #e7e9f2); padding: 14px 0; }
+  .medication-detail:first-child { border-top: 0; padding-top: 0; }
+  .medication-detail p { margin: 4px 0 0; }
+</style>
 </head>
 <body>
 
@@ -30,7 +88,7 @@ require_once __DIR__ . '/../patient_data.php';
           <span class="icon icon-dashboard" aria-hidden="true"></span>
           <span class="nav-text">My Dashboard</span>
         </a></li>
-        <li><a href="patient_profile.php" class="nav-item" title="My Profile">
+        <li><a href="patient_profile_edit.php" class="nav-item" title="My Profile">
           <span class="icon icon-profile" aria-hidden="true"></span>
           <span class="nav-text">My Profile</span>
         </a></li>
@@ -84,10 +142,6 @@ require_once __DIR__ . '/../patient_data.php';
         </div>
       </div>
       <div class="topbar-actions">
-        <button class="icon-btn" aria-label="Notifications">
-          <span class="icon icon-bell" aria-hidden="true"></span>
-          <span class="dot"></span>
-        </button>
         <a href="../../../logout.php" class="signout-btn">Sign Out</a>
       </div>
     </header>
@@ -96,75 +150,87 @@ require_once __DIR__ . '/../patient_data.php';
 
       <div class="card list-card wide-card">
         <div class="list-card-header">
-          <h3>Active Medications</h3>
+          <h3>My Prescriptions</h3>
         </div>
 
         <div class="table-wrap">
-          <table class="data-table">
+          <table class="data-table prescription-table">
             <thead>
               <tr>
-                <th>Medication</th>
-                <th>Dosage</th>
-                <th>Frequency</th>
-                <th>Prescribed By</th>
-                <th>Start Date</th>
+                <th>Prescription ID</th>
+                <th>Doctor</th>
+                <th>Prescription Date</th>
                 <th>Status</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
-              <?php foreach ($prescriptions as $prescription): ?>
-                <?php if ($prescription['status'] !== 'active') { continue; } ?>
-                <tr>
-                  <td class="med-name"><?= htmlspecialchars($prescription['medicine_name']) ?></td>
-                  <td><?= htmlspecialchars($prescription['dosage']) ?></td>
-                  <td><?= htmlspecialchars($prescription['frequency']) ?></td>
-                  <td><?= htmlspecialchars('Dr. ' . $prescription['doctor_first_name'] . ' ' . $prescription['doctor_last_name']) ?></td>
-                  <td><?= htmlspecialchars(date('d M Y', strtotime($prescription['prescription_date']))) ?></td>
-                  <td><span class="badge badge-active">Active</span></td>
-                </tr>
-              <?php endforeach; ?>
+              <?php if (!$prescription_groups): ?>
+                <tr><td colspan="5">No prescriptions found.</td></tr>
+              <?php else: ?>
+                <?php foreach ($prescription_groups as $prescription): ?>
+                  <tr>
+                    <td>#<?= (int) $prescription['prescription_id'] ?></td>
+                    <td><?= htmlspecialchars($prescription['doctor_name']) ?></td>
+                    <td><?= htmlspecialchars(date('d M Y', strtotime($prescription['prescription_date']))) ?></td>
+                    <td><span class="badge <?= $prescription['status'] === 'active' ? 'badge-active' : 'badge-done' ?>"><?= htmlspecialchars(ucfirst($prescription['status'])) ?></span></td>
+                    <td><button type="button" class="view-prescription-btn" data-prescription-id="<?= (int) $prescription['prescription_id'] ?>">View</button></td>
+                  </tr>
+                <?php endforeach; ?>
+              <?php endif; ?>
             </tbody>
           </table>
         </div>
       </div>
 
-      <div class="card list-card wide-card">
-        <div class="list-card-header">
-          <h3>Past Medications</h3>
-        </div>
+      <?php foreach ($prescription_groups as $prescription): ?>
+        <div class="prescription-modal" id="prescription-<?= (int) $prescription['prescription_id'] ?>" aria-hidden="true">
+          <div class="prescription-modal-card" role="dialog" aria-modal="true" aria-labelledby="prescription-title-<?= (int) $prescription['prescription_id'] ?>">
+            <div class="prescription-modal-head">
+              <div>
+                <h3 id="prescription-title-<?= (int) $prescription['prescription_id'] ?>">Prescription #<?= (int) $prescription['prescription_id'] ?></h3>
+                <p class="prescription-modal-meta"><?= htmlspecialchars($prescription['doctor_name']) ?> · <?= htmlspecialchars(date('d M Y', strtotime($prescription['prescription_date']))) ?></p>
+              </div>
+              <button type="button" class="prescription-modal-close" aria-label="Close">&times;</button>
+            </div>
 
-        <div class="table-wrap">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Medication</th>
-                <th>Dosage</th>
-                <th>Frequency</th>
-                <th>Prescribed By</th>
-                <th>Duration</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              <?php foreach ($prescriptions as $prescription): ?>
-                <?php if ($prescription['status'] === 'active') { continue; } ?>
-                <tr>
-                  <td class="med-name"><?= htmlspecialchars($prescription['medicine_name']) ?></td>
-                  <td><?= htmlspecialchars($prescription['dosage']) ?></td>
-                  <td><?= htmlspecialchars($prescription['frequency']) ?></td>
-                  <td><?= htmlspecialchars('Dr. ' . $prescription['doctor_first_name'] . ' ' . $prescription['doctor_last_name']) ?></td>
-                  <td><?= htmlspecialchars($prescription['duration'] ?: date('d M Y', strtotime($prescription['prescription_date']))) ?></td>
-                  <td><span class="badge badge-done"><?= htmlspecialchars(ucfirst($prescription['status'])) ?></span></td>
-                </tr>
-              <?php endforeach; ?>
-            </tbody>
-          </table>
+            <?php foreach ($prescription['items'] as $item): ?>
+              <div class="medication-detail">
+                <strong><?= htmlspecialchars($item['medicine_name']) ?></strong>
+                <p><?= htmlspecialchars($item['dosage']) ?> · <?= htmlspecialchars($item['frequency']) ?> · <?= htmlspecialchars($item['duration']) ?></p>
+                <?php if (!empty($item['instructions'])): ?>
+                  <p><?= htmlspecialchars($item['instructions']) ?></p>
+                <?php endif; ?>
+              </div>
+            <?php endforeach; ?>
+          </div>
         </div>
-      </div>
+      <?php endforeach; ?>
 
     </section>
   </main>
 </div>
+
+<script>
+  document.querySelectorAll('.view-prescription-btn').forEach((button) => {
+    button.addEventListener('click', () => {
+      const modal = document.getElementById('prescription-' + button.dataset.prescriptionId);
+      if (modal) {
+        modal.classList.add('open');
+        modal.setAttribute('aria-hidden', 'false');
+      }
+    });
+  });
+
+  document.querySelectorAll('.prescription-modal').forEach((modal) => {
+    modal.addEventListener('click', (event) => {
+      if (event.target === modal || event.target.classList.contains('prescription-modal-close')) {
+        modal.classList.remove('open');
+        modal.setAttribute('aria-hidden', 'true');
+      }
+    });
+  });
+</script>
 
 </body>
 </html>

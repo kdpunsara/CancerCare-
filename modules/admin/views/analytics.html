@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports &amp; Analytics - CancerCare</title>
+    <link rel="stylesheet" href="../../../public/css/base.css">
+</head>
+<body>
+<div class="app">
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-mark">CC</div>
+            <div class="brand-text">
+                <h1>CancerCare</h1>
+                <p>Admin Portal</p>
+            </div>
+        </div>
+        <nav class="nav">
+            <p class="nav-label">System Administration</p>
+            <ul>
+                <li><a href="admin_dashboard.php" class="nav-item"><span class="icon icon-dashboard" aria-hidden="true"></span><span class="nav-text">Dashboard</span></a></li>
+                <li><a href="user_management.php" class="nav-item"><span class="icon icon-profile" aria-hidden="true"></span><span class="nav-text">User Management</span></a></li>
+                <li><a href="operations.html" class="nav-item"><span class="icon icon-appointments" aria-hidden="true"></span><span class="nav-text">Operations</span></a></li>
+                <li><a href="analytics.html" class="nav-item active"><span class="icon icon-records" aria-hidden="true"></span><span class="nav-text">Reports &amp; Analytics</span></a></li>
+                <li><a href="admin_profile.php" class="nav-item"><span class="icon icon-profile" aria-hidden="true"></span><span class="nav-text">My Profile</span></a></li>
+            </ul>
+        </nav>
+        <div class="sidebar-user">
+            <div class="avatar">AD</div>
+            <div>
+                <p class="user-name">System Admin</p>
+                <p class="user-role">Administrator</p>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <div class="topbar-left">
+                <div>
+                    <h2>Reports &amp; Analytics</h2>
+                    <p class="date">Export operational and clinical reports</p>
+                </div>
+            </div>
+            <div class="topbar-actions">
+                <a href="../../../logout.php" class="signout-btn">Sign Out</a>
+            </div>
+        </header>
+
+        <section class="content">
+            <div class="card form-card wide-card">
+                <div class="list-card-header">
+                    <div>
+                        <h3>Generate Hospital Report</h3>
+                        <p class="table-caption">Choose a report scope and export format.</p>
+                    </div>
+                </div>
+                <form action="analytics.html" method="GET">
+                    <div class="form-grid">
+                        <div class="form-field">
+                            <label for="report-type">Report Type</label>
+                            <select id="report-type" name="report_type" required>
+                                <option value="occupancy">Hospital Operations &amp; Occupancy</option>
+                                <option value="pharmacy">Pharmacy Inventory &amp; Dispensing</option>
+                                <option value="demographics">Patient Demographics</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label for="timeline">Timeline</label>
+                            <select id="timeline" name="timeline" required>
+                                <option value="30">Last 30 Days</option>
+                                <option value="90">Last Quarter</option>
+                                <option value="365">Full Year</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label for="format">Format</label>
+                            <select id="format" name="format" required>
+                                <option value="pdf">PDF Document</option>
+                                <option value="excel">Excel Sheet</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">Generate &amp; Download</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </main>
+</div>
+</body>
+</html>
