@@ -100,8 +100,13 @@ $medical_records = patient_query_rows($conn,
 
 $medical_reports = patient_query_rows($conn,
     "SELECT report_id, report_type, report_title, file_path,
+<<<<<<< HEAD
     uploaded_at AS upload_date, report_details AS notes
     FROM MedicalReport WHERE patient_user_id = ? ORDER BY uploaded_at DESC", $patient_id);
+=======
+         upload_date, notes
+     FROM MedicalReport WHERE patient_user_id = ? ORDER BY upload_date DESC", $patient_id);
+>>>>>>> b7824610d4819e0c50116b94c79860a5ca41483a
 
 $prescriptions = patient_query_rows($conn,
     "SELECT p.prescription_id, p.prescription_date, p.status, p.diagnosis_notes,

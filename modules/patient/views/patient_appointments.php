@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../patient_data.php';
+
 $stmt = $conn->prepare(
 "SELECT reminder_id, reminder_title, reminder_date, reminder_time
 FROM Reminder
@@ -17,7 +18,7 @@ $reminders = $stmt->get_result();
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Appointments — Apeksha OncoCare</title>
 <link rel="stylesheet" href="../../../public/css/base.css?v=3">
-<link rel="stylesheet" href="../../../public/css/appointments.css">
+<link rel="stylesheet" href="../../../public/css/appointments.css?v=2">
 </head>
 <body>
 <div class="app">
@@ -94,152 +95,95 @@ $reminders = $stmt->get_result();
 
    
 
-<div class="card list-card wide-card">
-<div class="list-card-header">
-<h3>My Reminders</h3>
-</div>
-<form method="POST" action="../patient_actions.php" class="reminder-form">
-<input type="hidden" name="action" value="add_reminder">
-<input name="reminder_title" class="reminder-input" type="text" placeholder="Enter a reminder" required>
-<input name="reminder_date" class="reminder-input" type="date" required>
-<input name="reminder_time" class="reminder-input" type="time">
-<button type="submit" class="request-btn reminder-add-btn">+ Add Reminder</button>
-</form>
-<ul class="reminder-list">
-<?php if ($reminders->num_rows === 0): ?>
-<li class="reminder-empty">No reminders added yet.</li>
-<?php else: ?>
-<?php while ($reminder = $reminders->fetch_assoc()): ?>
-<li class="reminder-item">
-<div class="reminder-details">
-<p class="reminder-title"><?= htmlspecialchars($reminder['reminder_title']) ?></p>
-<p class="reminder-date">
-<?= htmlspecialchars(date("M j, Y g:i A", strtotime($reminder['reminder_date'] . " " . (isset($reminder['reminder_time']) ? $reminder['reminder_time'] : '00:00:00')))) ?>
-</p>
-</div>
-<form method="POST" action="../patient_actions.php">
-<input type="hidden" name="action" value="delete_reminder">
-<input type="hidden" name="reminder_id" value="<?= (int)$reminder['reminder_id'] ?>">
-<button type="submit" class="reminder-delete-btn"
-onclick="return confirm('Delete this reminder?');">Delete</button>
-</form>
-</li>
-<?php endwhile; ?>
-<?php endif; ?>
-</ul>
-</div>
- <!-- NEW SEARCH FORM ADDED HERE -->
-    <div class="card list-card wide-card">
+      <div class="card list-card wide-card">
         <div class="list-card-header">
-            <h3>Search Appointments</h3>
+          <h3>My Reminders</h3>
         </div>
-        <form id="appointment-search-form" class="reminder-form" onsubmit="return false;" style="display: flex; gap: 15px; align-items: center;">
-            <input id="search-doctor" name="doctor" class="reminder-input" type="text" placeholder="Search by Doctor Name" style="flex: 2;">
-            <input id="search-date" name="date" class="reminder-input" type="date" style="flex: 1;">
-            <button type="button" class="request-btn reminder-add-btn" style="padding: 10px 20px;">Search</button>
-            <button type="button" id="search-clear-btn" class="request-btn reminder-add-btn" style="background-color: #6c757d; text-decoration: none; display: none; align-items: center; padding: 10px 20px;">Clear</button>
+
+        <form method="POST" action="../patient_actions.php" class="reminder-form">
+          <input type="hidden" name="action" value="add_reminder">
+          <input name="reminder_title" class="reminder-input" type="text" placeholder="Enter a reminder" required>
+          <input name="reminder_date" class="reminder-input" type="date" required>
+          <input name="reminder_time" class="reminder-input" type="time">
+          <button type="submit" class="request-btn reminder-add-btn">+ Add Reminder</button>
         </form>
-    </div>
-    <!-- END SEARCH FORM -->
-<div class="card list-card wide-card">
-<div class="list-card-header">
-<h3>Upcoming Appointments</h3>
-<div class="filter-pills">
-<span class="pill pill-active">All</span>
-<span class="pill">Upcoming</span>
-<span class="pill">Past</span>
-</div>
-</div>
-<ul class="appointment-list" id="upcoming-list">
-<?php $has_upcoming = false; foreach ($appointments as $appointment): ?>
-<?php if ($appointment['appointment_status'] !== 'upcoming') { continue; } $has_upcoming = true; ?>
-<li class="appointment-item confirmed" data-doctor="<?= htmlspecialchars(strtolower('dr. ' . $appointment['doctor_first_name'] . ' ' . $appointment['doctor_last_name'])) ?>" data-date="<?= htmlspecialchars($appointment['appointment_date']) ?>">
-<div class="appointment-time"><span class="time"><?= htmlspecialchars(date('g:i A', strtotime($appointment['appointment_time']))) ?></span><span class="date"><?= htmlspecialchars(date('M j, Y', strtotime($appointment['appointment_date']))) ?></span></div>
-<div class="appointment-info">
-<p class="appointment-name"><?= htmlspecialchars($appointment['reason'] ?: 'Appointment') ?></p>
-<p class="appointment-desc"><?= htmlspecialchars('Dr. ' . $appointment['doctor_first_name'] . ' ' . $appointment['doctor_last_name']) ?></p>
-</div>
-<span class="status status-confirmed">upcoming</span>
-</li>
-<?php endforeach; ?>
-<li class="appointment-item empty-state" id="empty-upcoming" style="justify-content: center; color: #64748b; <?= $has_upcoming ? 'display: none;' : '' ?>">No upcoming appointments found.</li>
-</ul>
-</div>
-<div class="card list-card wide-card">
-<div class="list-card-header">
-<h3>Past Appointments</h3>
-</div>
-<ul class="appointment-list" id="past-list">
-<?php $has_past = false; foreach ($appointments as $appointment): ?>
-<?php if ($appointment['appointment_status'] !== 'completed') { continue; } $has_past = true; ?>
-<li class="appointment-item completed" data-doctor="<?= htmlspecialchars(strtolower('dr. ' . $appointment['doctor_first_name'] . ' ' . $appointment['doctor_last_name'])) ?>" data-date="<?= htmlspecialchars($appointment['appointment_date']) ?>">
-<div class="appointment-time"><span class="time"><?= htmlspecialchars(date('g:i A', strtotime($appointment['appointment_time']))) ?></span><span class="date"><?= htmlspecialchars(date('M j, Y', strtotime($appointment['appointment_date']))) ?></span></div>
-<div class="appointment-info">
-<p class="appointment-name"><?= htmlspecialchars($appointment['reason'] ?: 'Appointment') ?></p>
-<p class="appointment-desc"><?= htmlspecialchars('Dr. ' . $appointment['doctor_first_name'] . ' ' . $appointment['doctor_last_name']) ?></p>
-</div>
-<span class="status status-completed">completed</span>
-</li>
-<?php endforeach; ?>
-<li class="appointment-item empty-state" id="empty-past" style="justify-content: center; color: #64748b; <?= $has_past ? 'display: none;' : '' ?>">No past appointments found.</li>
-</ul>
-</div>
-</section>
-</main>
+
+        <ul class="reminder-list">
+          <?php if ($reminders->num_rows === 0): ?>
+            <li class="reminder-empty">No reminders added yet.</li>
+          <?php else: ?>
+            <?php while ($reminder = $reminders->fetch_assoc()): ?>
+              <li class="reminder-item">
+                <div class="reminder-details">
+                  <p class="reminder-title"><?= htmlspecialchars($reminder['reminder_title']) ?></p>
+                  <p class="reminder-date">
+                    <?= htmlspecialchars(date("M j, Y g:i A", strtotime($reminder['reminder_date'] . " " . (isset($reminder['reminder_time']) ? $reminder['reminder_time'] : '00:00:00')))) ?>
+                  </p>
+                </div>
+                <form method="POST" action="../patient_actions.php">
+                  <input type="hidden" name="action" value="delete_reminder">
+                  <input type="hidden" name="reminder_id" value="<?= (int)$reminder['reminder_id'] ?>">
+                  <button type="submit" class="reminder-delete-btn"
+                          onclick="return confirm('Delete this reminder?');">Delete</button>
+                </form>
+              </li>
+            <?php endwhile; ?>
+          <?php endif; ?>
+        </ul>
+      </div>
+
+
+      <div class="card list-card wide-card">
+        <div class="list-card-header">
+          <h3>Upcoming Appointments</h3>
+          <div class="filter-pills">
+            <span class="pill pill-active">All</span>
+            <span class="pill">Upcoming</span>
+            <span class="pill">Past</span>
+          </div>
+        </div>
+
+        <ul class="appointment-list">
+          <?php foreach ($appointments as $appointment): ?>
+            <?php if ($appointment['appointment_status'] !== 'upcoming') { continue; } ?>
+            <li class="appointment-item confirmed">
+              <div class="appointment-time"><span class="time"><?= htmlspecialchars(date('g:i A', strtotime($appointment['appointment_time']))) ?></span><span class="date"><?= htmlspecialchars(date('M j, Y', strtotime($appointment['appointment_date']))) ?></span></div>
+              <div class="appointment-info">
+                <p class="appointment-name"><?= htmlspecialchars($appointment['reason'] ?: 'Appointment') ?></p>
+                <p class="appointment-desc"><?= htmlspecialchars('Dr. ' . $appointment['doctor_first_name'] . ' ' . $appointment['doctor_last_name']) ?></p>
+              </div>
+              <span class="status status-confirmed">upcoming</span>
+            </li>
+          <?php endforeach; ?>
+        </ul>
+      </div>
+
+
+
+      <div class="card list-card wide-card">
+        <div class="list-card-header">
+          <h3>Past Appointments</h3>
+        </div>
+
+        <ul class="appointment-list">
+          <?php foreach ($appointments as $appointment): ?>
+            <?php if ($appointment['appointment_status'] !== 'completed') { continue; } ?>
+            <li class="appointment-item completed">
+              <div class="appointment-time"><span class="time"><?= htmlspecialchars(date('g:i A', strtotime($appointment['appointment_time']))) ?></span><span class="date"><?= htmlspecialchars(date('M j, Y', strtotime($appointment['appointment_date']))) ?></span></div>
+              <div class="appointment-info">
+                <p class="appointment-name"><?= htmlspecialchars($appointment['reason'] ?: 'Appointment') ?></p>
+                <p class="appointment-desc"><?= htmlspecialchars('Dr. ' . $appointment['doctor_first_name'] . ' ' . $appointment['doctor_last_name']) ?></p>
+              </div>
+              <span class="status status-completed">completed</span>
+            </li>
+          <?php endforeach; ?>
+        </ul>
+      </div>
+
+    </section>
+  </main>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const doctorInput = document.getElementById('search-doctor');
-    const dateInput = document.getElementById('search-date');
-    const clearBtn = document.getElementById('search-clear-btn');
-    const allAppointments = document.querySelectorAll('.appointment-item:not(.empty-state)');
-    
-    function filterAppointments() {
-        const docVal = doctorInput.value.toLowerCase().trim();
-        const dateVal = dateInput.value;
-        
-        let hasUpcoming = false;
-        let hasPast = false;
-        
-        if (docVal || dateVal) {
-            clearBtn.style.display = 'inline-flex';
-        } else {
-            clearBtn.style.display = 'none';
-        }
 
-        allAppointments.forEach(item => {
-            const itemDoctor = item.getAttribute('data-doctor') || '';
-            const itemDate = item.getAttribute('data-date') || '';
-            
-            const matchDoctor = docVal === '' || itemDoctor.includes(docVal);
-            const matchDate = dateVal === '' || itemDate === dateVal;
-            
-            if (matchDoctor && matchDate) {
-                item.style.display = 'flex'; // or default display
-                if (item.classList.contains('confirmed')) hasUpcoming = true;
-                if (item.classList.contains('completed')) hasPast = true;
-            } else {
-                item.style.display = 'none';
-            }
-        });
-        
-        document.getElementById('empty-upcoming').style.display = hasUpcoming ? 'none' : 'flex';
-        document.getElementById('empty-past').style.display = hasPast ? 'none' : 'flex';
-    }
-
-    doctorInput.addEventListener('input', filterAppointments);
-    dateInput.addEventListener('change', filterAppointments);
-    
-    clearBtn.addEventListener('click', function() {
-        doctorInput.value = '';
-        dateInput.value = '';
-        filterAppointments();
-    });
-    
-    // Initial filter if values are present (e.g., from browser back button)
-    filterAppointments();
-});
-</script>
 </body>
 </html>
