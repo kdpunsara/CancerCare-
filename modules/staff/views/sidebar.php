@@ -15,6 +15,67 @@
 
 $activePage = $activePage ?? '';
 
+/* =========================================================
+   GET LOGGED-IN STAFF DETAILS
+   (shows the real logged-in staff member's name instead of a
+   hardcoded one, everywhere this shared sidebar is included)
+========================================================= */
+
+$staffFirstName = '';
+$staffLastName  = '';
+
+$loggedInStaffId = 0;
+
+foreach (['user_id', 'staff_id', 'uid'] as $key) {
+    if (!empty($_SESSION[$key] ?? null)) {
+        $loggedInStaffId = (int)$_SESSION[$key];
+        break;
+    }
+}
+
+if ($loggedInStaffId > 0 && isset($conn)) {
+
+    try {
+
+        $stmt = $conn->prepare(
+            "SELECT first_name, last_name
+               FROM Medical_Staff
+              WHERE user_id = ?"
+        );
+        $stmt->bind_param("i", $loggedInStaffId);
+        $stmt->execute();
+        $staffRow = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        if ($staffRow) {
+            $staffFirstName = $staffRow['first_name'];
+            $staffLastName  = $staffRow['last_name'];
+        }
+
+    } catch (Throwable $ex) {
+        // Keep defaults if the lookup fails
+    }
+
+}
+
+$staffFullName = trim($staffFirstName . ' ' . $staffLastName);
+
+if ($staffFullName === '') {
+    $staffFullName = 'Staff Member';
+}
+
+$staffInitials = '';
+
+foreach ([$staffFirstName, $staffLastName] as $part) {
+    if ($part !== '') {
+        $staffInitials .= strtoupper($part[0]);
+    }
+}
+
+if ($staffInitials === '') {
+    $staffInitials = 'ST';
+}
+
 $navItems = [
     'dashboard'    => ['staff_dashboard.php',     'icon-dashboard',    'Dashboard'],
     'patients'     => ['staff_patient.php',       'icon-profile',      'Patients'],
@@ -100,9 +161,9 @@ $navItems = [
 
     <div class="sidebar-footer">
         <div class="user-card">
-            <div class="user-avatar">NP</div>
+            <div class="user-avatar"><?= htmlspecialchars($staffInitials) ?></div>
             <div class="user-info">
-                <strong>Nimali Perera</strong>
+                <strong><?= htmlspecialchars($staffFullName) ?></strong>
                 <span>Medical Staff</span>
             </div>
         </div>

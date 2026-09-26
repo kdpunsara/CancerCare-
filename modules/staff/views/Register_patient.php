@@ -1,56 +1,124 @@
 <?php
+
 session_start();
 
-if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'staff') {
+/*
+|--------------------------------------------------------------------------
+| ERROR REPORTING - Development only
+|--------------------------------------------------------------------------
+*/
+error_reporting(E_ALL);
+ini_set('display_errors', '1');
+
+
+/*
+|--------------------------------------------------------------------------
+| STAFF LOGIN CHECK
+|--------------------------------------------------------------------------
+*/
+if (
+    !isset($_SESSION['user_id']) ||
+    strtolower($_SESSION['role'] ?? '') !== 'staff'
+) {
     header("Location: ../../../login.php");
     exit();
 }
 
-// DB connection eka
+
+/*
+|--------------------------------------------------------------------------
+| DATABASE CONNECTION
+|--------------------------------------------------------------------------
+*/
 require_once __DIR__ . '/../../../config/database.php';
 
-// medical_actions.php eken ena error message + old form data
+
+/*
+|--------------------------------------------------------------------------
+| ERROR + OLD FORM DATA
+|--------------------------------------------------------------------------
+*/
 $error = $_SESSION['error'] ?? '';
 $old   = $_SESSION['old'] ?? [];
 
 unset($_SESSION['error'], $_SESSION['old']);
 
-// Input eke value eka ayeth pennanna
+
+/*
+|--------------------------------------------------------------------------
+| Helper: old form value
+|--------------------------------------------------------------------------
+*/
 function old($name, $default = '')
 {
     global $old;
-    return htmlspecialchars($old[$name] ?? $default);
+
+    return htmlspecialchars(
+        $old[$name] ?? $default,
+        ENT_QUOTES,
+        'UTF-8'
+    );
 }
 
-// Select eke option eka ayeth select karanna
+
+/*
+|--------------------------------------------------------------------------
+| Helper: selected option
+|--------------------------------------------------------------------------
+*/
 function selected($name, $value)
 {
     global $old;
-    return (($old[$name] ?? '') === (string)$value) ? 'selected' : '';
+
+    return (($old[$name] ?? '') === (string)$value)
+        ? 'selected'
+        : '';
 }
 
-// Doctor table eken doctors load karanna
+
+/*
+|--------------------------------------------------------------------------
+| LOAD DOCTORS
+|--------------------------------------------------------------------------
+*/
 $doctors = [];
 
 try {
 
-    $res = $conn->query(
-        "SELECT user_id, first_name, last_name, specialization
-         FROM `Doctor`
-         ORDER BY first_name, last_name"
-    );
+    $sql = "
+        SELECT
+            user_id,
+            first_name,
+            last_name,
+            specialization
+        FROM `Doctor`
+        ORDER BY first_name, last_name
+    ";
 
-    while ($row = $res->fetch_assoc()) {
-        $doctors[] = $row;
+    $res = $conn->query($sql);
+
+    if ($res) {
+        while ($row = $res->fetch_assoc()) {
+            $doctors[] = $row;
+        }
     }
 
 } catch (Throwable $e) {
 
     $doctors = [];
+
+    // Development debugging
+    error_log("Doctor loading error: " . $e->getMessage());
 }
 
-?>
 
+/*
+|--------------------------------------------------------------------------
+| REGISTER FORM CONFIG
+|--------------------------------------------------------------------------
+*/
+
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -75,10 +143,6 @@ try {
         href="../../../public/css/modules.css"
     >
 
-    <!-- =====================================================
-         SIDEBAR SVG ICONS
-    ====================================================== -->
-
     <style>
 
         .icon {
@@ -96,37 +160,30 @@ try {
             height: 18px;
         }
 
-        /* Dashboard */
         .icon-dashboard {
             background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='3' width='7' height='9' rx='1.5'/><rect x='14' y='3' width='7' height='5' rx='1.5'/><rect x='14' y='12' width='7' height='9' rx='1.5'/><rect x='3' y='16' width='7' height='5' rx='1.5'/></svg>");
         }
 
-        /* Patients */
         .icon-profile {
             background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='8' r='4'/><path d='M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7'/></svg>");
         }
 
-        /* Register Patient */
         .icon-register {
             background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M15 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2'/><circle cx='8.5' cy='7' r='4'/><path d='M20 8v6M17 11h6'/></svg>");
         }
 
-        /* Appointments */
         .icon-appointments {
             background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='5' width='18' height='16' rx='2'/><path d='M16 3v4M8 3v4M3 10h18'/></svg>");
         }
 
-        /* Medical Reports */
         .icon-records {
             background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M7 3h7l4 4v14H7z'/><path d='M9 12h6M9 16h6M9 8h2'/></svg>");
         }
 
-        /* Doctor Availability */
         .icon-doctor {
             background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='7' r='4'/><path d='M5 21v-2a7 7 0 0 1 14 0v2'/><path d='M17 16l2 2 4-4'/></svg>");
         }
 
-        /* Benefactor */
         .icon-benefactor {
             background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='9' cy='7' r='4'/><path d='M2 21v-2a7 7 0 0 1 14 0v2'/><path d='M16 11h6M19 8v6'/></svg>");
         }
@@ -140,220 +197,8 @@ try {
 
 <div class="app">
 
-    <!-- =====================================================
-         SIDEBAR
-    ====================================================== -->
 
-    <aside
-        class="sidebar"
-        id="sidebar"
-    >
-
-        <!-- SIDEBAR HEADER -->
-
-        <div class="sidebar-header">
-
-            <div class="logo">
-
-                <div class="logo-icon">
-                    ❤
-                </div>
-
-                <div>
-
-                    Cancer care
-
-                    <span class="logo-sub">
-                        CANCER PATIENT CARE
-                    </span>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <!-- =================================================
-             NAVIGATION
-        ================================================== -->
-
-        <nav class="sidebar-nav">
-
-            <div class="nav-section">
-                NAVIGATION
-            </div>
-
-
-            <!-- DASHBOARD -->
-
-            <a
-                href="staff_dashboard.php"
-                class="nav-item"
-            >
-
-                <span class="icon icon-dashboard"></span>
-
-                Dashboard
-
-            </a>
-
-
-            <!-- PATIENTS -->
-
-            <a
-                href="staff_patient.php"
-                class="nav-item"
-            >
-
-                <span class="icon icon-profile"></span>
-
-                Patients
-
-            </a>
-
-
-            <!-- REGISTER PATIENT -->
-
-            <a
-                href="Register_patient.php"
-                class="nav-item active"
-            >
-
-                <span class="icon icon-register"></span>
-
-                Register Patient
-
-            </a>
-
-
-            <!-- APPOINTMENTS -->
-
-            <a
-                href="./staff_appointment.php"
-                class="nav-item"
-            >
-
-                <span class="icon icon-appointments"></span>
-
-                Appointments
-
-            </a>
-
-
-            <!-- MEDICAL REPORTS -->
-
-            <a
-                href="./medical_reports.php"
-                class="nav-item"
-            >
-
-                <span class="icon icon-records"></span>
-
-                Medical Reports
-
-            </a>
-
-
-            <!-- DOCTOR AVAILABILITY -->
-
-            <a
-                href="./doctor_availability.php"
-                class="nav-item"
-            >
-
-                <span class="icon icon-doctor"></span>
-
-                Doctor Availability
-
-            </a>
-
-
-            <!-- BENEFACTOR -->
-
-            <a
-                href="./benefactor.php"
-                class="nav-item"
-            >
-
-                <span class="icon icon-benefactor"></span>
-
-                Benefactor
-
-            </a>
-
-            <a
-                href="./staff_profile.php"
-                class="nav-item"
-            >
-                <span class="icon icon-profile"></span>
-                My Profile
-            </a>
-
-        </nav>
-
-
-        <!-- =================================================
-             USER PROFILE FOOTER
-        ================================================== -->
-
-        <div
-            class="sidebar-footer"
-            style="
-                padding:15px;
-                border-top:1px solid rgba(255,255,255,0.1);
-                display:flex;
-                align-items:center;
-                gap:10px;
-                margin-top:auto;
-            "
-        >
-
-            <div
-                style="
-                    background:#0066ff;
-                    color:white;
-                    width:35px;
-                    height:35px;
-                    border-radius:50%;
-                    display:flex;
-                    align-items:center;
-                    justify-content:center;
-                    font-weight:bold;
-                    font-size:14px;
-                "
-            >
-                NP
-            </div>
-
-
-            <div>
-
-                <div
-                    style="
-                        color:white;
-                        font-size:14px;
-                        font-weight:500;
-                    "
-                >
-                    Nimali Perera
-                </div>
-
-
-                <div
-                    style="
-                        color:#8a99ad;
-                        font-size:12px;
-                    "
-                >
-                    Medical Staff
-                </div>
-
-            </div>
-
-        </div>
-
-    </aside>
+<?php $activePage = 'register'; require __DIR__ . '/sidebar.php'; ?>
 
 
     <!-- =====================================================
@@ -361,6 +206,7 @@ try {
     ====================================================== -->
 
     <main class="main">
+
 
         <!-- TOP BAR -->
 
@@ -388,8 +234,6 @@ try {
                 "
             >
 
-                <!-- SIGN OUT -->
-
                 <a
                     href="../../../logout.php"
                     class="btn btn-outline"
@@ -410,18 +254,14 @@ try {
         </header>
 
 
-        <!-- =================================================
-             CONTENT
-        ================================================== -->
+        <!-- CONTENT -->
 
         <div class="content">
 
             <div class="form-card">
 
 
-                <!-- =================================================
-                     ERROR MESSAGE
-                ================================================== -->
+                <!-- ERROR MESSAGE -->
 
                 <?php if (!empty($error)): ?>
 
@@ -435,16 +275,18 @@ try {
                         "
                     >
 
-                        <?= htmlspecialchars($error) ?>
+                        <?= htmlspecialchars(
+                            $error,
+                            ENT_QUOTES,
+                            'UTF-8'
+                        ) ?>
 
                     </div>
 
                 <?php endif; ?>
 
 
-                <!-- =================================================
-                     REGISTER FORM
-                ================================================== -->
+                <!-- REGISTER FORM -->
 
                 <form
                     method="POST"
@@ -470,6 +312,31 @@ try {
 
 
                         <div class="form-grid cols-3">
+
+
+                            <!-- USERNAME -->
+
+                            <div class="form-group">
+
+                                <label>
+                                    Username
+                                    <span class="req">*</span>
+                                </label>
+
+                                <input
+                                    type="text"
+                                    name="username"
+                                    class="form-input"
+                                    value="<?= old('username') ?>"
+                                    placeholder="e.g. nimal.perera"
+                                    required
+                                >
+
+                                <small style="color:#64748b;">
+                                    Used to log in. Must be unique.
+                                </small>
+
+                            </div>
 
 
                             <!-- FIRST NAME -->
@@ -532,7 +399,7 @@ try {
                             </div>
 
 
-                            <!-- DATE OF BIRTH -->
+                            <!-- DOB -->
 
                             <div class="form-group">
 
@@ -574,23 +441,22 @@ try {
 
                                     <option
                                         value="male"
-                                        <?= selected('gender', 'male') ?>
+                                        <?= selected(
+                                            'gender',
+                                            'male'
+                                        ) ?>
                                     >
                                         Male
                                     </option>
 
                                     <option
                                         value="female"
-                                        <?= selected('gender', 'female') ?>
+                                        <?= selected(
+                                            'gender',
+                                            'female'
+                                        ) ?>
                                     >
                                         Female
-                                    </option>
-
-                                    <option
-                                        value="other"
-                                        <?= selected('gender', 'other') ?>
-                                    >
-                                        Other
                                     </option>
 
                                 </select>
@@ -709,56 +575,80 @@ try {
 
                                     <option
                                         value="O+"
-                                        <?= selected('blood_group', 'O+') ?>
+                                        <?= selected(
+                                            'blood_group',
+                                            'O+'
+                                        ) ?>
                                     >
                                         O+
                                     </option>
 
                                     <option
                                         value="O-"
-                                        <?= selected('blood_group', 'O-') ?>
+                                        <?= selected(
+                                            'blood_group',
+                                            'O-'
+                                        ) ?>
                                     >
                                         O-
                                     </option>
 
                                     <option
                                         value="A+"
-                                        <?= selected('blood_group', 'A+') ?>
+                                        <?= selected(
+                                            'blood_group',
+                                            'A+'
+                                        ) ?>
                                     >
                                         A+
                                     </option>
 
                                     <option
                                         value="A-"
-                                        <?= selected('blood_group', 'A-') ?>
+                                        <?= selected(
+                                            'blood_group',
+                                            'A-'
+                                        ) ?>
                                     >
                                         A-
                                     </option>
 
                                     <option
                                         value="B+"
-                                        <?= selected('blood_group', 'B+') ?>
+                                        <?= selected(
+                                            'blood_group',
+                                            'B+'
+                                        ) ?>
                                     >
                                         B+
                                     </option>
 
                                     <option
                                         value="B-"
-                                        <?= selected('blood_group', 'B-') ?>
+                                        <?= selected(
+                                            'blood_group',
+                                            'B-'
+                                        ) ?>
                                     >
                                         B-
                                     </option>
 
                                     <option
                                         value="AB+"
-                                        <?= selected('blood_group', 'AB+') ?>
+                                        <?= selected(
+                                            'blood_group',
+                                            'AB+'
+                                        ) ?>
                                     >
                                         AB+
                                     </option>
 
                                     <option
                                         value="AB-"
-                                        <?= selected('blood_group', 'AB-') ?>
+                                        <?= selected(
+                                            'blood_group',
+                                            'AB-'
+                                        ) ?>
                                     >
                                         AB-
                                     </option>
@@ -780,7 +670,9 @@ try {
                                     type="tel"
                                     name="emergency_contact"
                                     class="form-input"
-                                    value="<?= old('emergency_contact') ?>"
+                                    value="<?= old(
+                                        'emergency_contact'
+                                    ) ?>"
                                 >
 
                             </div>
@@ -825,49 +717,70 @@ try {
 
                                     <option
                                         value="breast"
-                                        <?= selected('cancer_type', 'breast') ?>
+                                        <?= selected(
+                                            'cancer_type',
+                                            'breast'
+                                        ) ?>
                                     >
                                         Breast
                                     </option>
 
                                     <option
                                         value="lung"
-                                        <?= selected('cancer_type', 'lung') ?>
+                                        <?= selected(
+                                            'cancer_type',
+                                            'lung'
+                                        ) ?>
                                     >
                                         Lung
                                     </option>
 
                                     <option
                                         value="leukemia"
-                                        <?= selected('cancer_type', 'leukemia') ?>
+                                        <?= selected(
+                                            'cancer_type',
+                                            'leukemia'
+                                        ) ?>
                                     >
                                         Leukemia
                                     </option>
 
                                     <option
                                         value="lymphoma"
-                                        <?= selected('cancer_type', 'lymphoma') ?>
+                                        <?= selected(
+                                            'cancer_type',
+                                            'lymphoma'
+                                        ) ?>
                                     >
                                         Lymphoma
                                     </option>
 
                                     <option
                                         value="colon"
-                                        <?= selected('cancer_type', 'colon') ?>
+                                        <?= selected(
+                                            'cancer_type',
+                                            'colon'
+                                        ) ?>
                                     >
                                         Colon
                                     </option>
 
                                     <option
                                         value="prostate"
-                                        <?= selected('cancer_type', 'prostate') ?>
+                                        <?= selected(
+                                            'cancer_type',
+                                            'prostate'
+                                        ) ?>
                                     >
                                         Prostate
                                     </option>
 
                                     <option
                                         value="other"
-                                        <?= selected('cancer_type', 'other') ?>
+                                        <?= selected(
+                                            'cancer_type',
+                                            'other'
+                                        ) ?>
                                     >
                                         Other
                                     </option>
@@ -898,28 +811,40 @@ try {
 
                                     <option
                                         value="I"
-                                        <?= selected('stage', 'I') ?>
+                                        <?= selected(
+                                            'stage',
+                                            'I'
+                                        ) ?>
                                     >
                                         I
                                     </option>
 
                                     <option
                                         value="II"
-                                        <?= selected('stage', 'II') ?>
+                                        <?= selected(
+                                            'stage',
+                                            'II'
+                                        ) ?>
                                     >
                                         II
                                     </option>
 
                                     <option
                                         value="III"
-                                        <?= selected('stage', 'III') ?>
+                                        <?= selected(
+                                            'stage',
+                                            'III'
+                                        ) ?>
                                     >
                                         III
                                     </option>
 
                                     <option
                                         value="IV"
-                                        <?= selected('stage', 'IV') ?>
+                                        <?= selected(
+                                            'stage',
+                                            'IV'
+                                        ) ?>
                                     >
                                         IV
                                     </option>
@@ -956,7 +881,9 @@ try {
                                             Select Doctor
                                         </option>
 
-                                        <?php foreach ($doctors as $d): ?>
+                                        <?php foreach (
+                                            $doctors as $d
+                                        ): ?>
 
                                             <option
                                                 value="<?= (int)$d['user_id'] ?>"
@@ -970,14 +897,22 @@ try {
                                                 <?= htmlspecialchars(
                                                     $d['first_name']
                                                     . ' '
-                                                    . $d['last_name']
+                                                    . $d['last_name'],
+                                                    ENT_QUOTES,
+                                                    'UTF-8'
                                                 ) ?>
 
-                                                <?php if (!empty($d['specialization'])): ?>
-
-                                                    —
-                                                    <?= htmlspecialchars(
+                                                <?php if (
+                                                    !empty(
                                                         $d['specialization']
+                                                    )
+                                                ): ?>
+
+                                                    -
+                                                    <?= htmlspecialchars(
+                                                        $d['specialization'],
+                                                        ENT_QUOTES,
+                                                        'UTF-8'
                                                     ) ?>
 
                                                 <?php endif; ?>
@@ -1006,7 +941,9 @@ try {
                                     name="treatment_plan"
                                     class="form-input"
                                     placeholder="e.g. Chemotherapy Cycle 1"
-                                    value="<?= old('treatment_plan') ?>"
+                                    value="<?= old(
+                                        'treatment_plan'
+                                    ) ?>"
                                 >
 
                             </div>
@@ -1024,7 +961,10 @@ try {
                                     type="text"
                                     name="allergies"
                                     class="form-input"
-                                    value="<?= old('allergies', 'None') ?>"
+                                    value="<?= old(
+                                        'allergies',
+                                        'None'
+                                    ) ?>"
                                 >
 
                             </div>
@@ -1045,28 +985,40 @@ try {
 
                                     <option
                                         value="active"
-                                        <?= selected('status', 'active') ?>
+                                        <?= selected(
+                                            'status',
+                                            'active'
+                                        ) ?>
                                     >
                                         Active
                                     </option>
 
                                     <option
                                         value="critical"
-                                        <?= selected('status', 'critical') ?>
+                                        <?= selected(
+                                            'status',
+                                            'critical'
+                                        ) ?>
                                     >
                                         Critical
                                     </option>
 
                                     <option
                                         value="stable"
-                                        <?= selected('status', 'stable') ?>
+                                        <?= selected(
+                                            'status',
+                                            'stable'
+                                        ) ?>
                                     >
                                         Stable
                                     </option>
 
                                     <option
                                         value="scheduled"
-                                        <?= selected('status', 'scheduled') ?>
+                                        <?= selected(
+                                            'status',
+                                            'scheduled'
+                                        ) ?>
                                     >
                                         Scheduled
                                     </option>
@@ -1089,8 +1041,6 @@ try {
                         style="margin-top:20px;"
                     >
 
-                        <!-- CANCEL -->
-
                         <button
                             type="button"
                             class="btn btn-outline"
@@ -1099,8 +1049,6 @@ try {
                             Cancel
                         </button>
 
-
-                        <!-- REGISTER -->
 
                         <button
                             type="submit"
@@ -1122,4 +1070,5 @@ try {
 </div>
 
 </body>
+
 </html>

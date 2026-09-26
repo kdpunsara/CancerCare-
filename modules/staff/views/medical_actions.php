@@ -10,11 +10,6 @@ error_reporting(E_ALL);
 
 session_start();
 
-if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'staff') {
-    header("Location: ../../../login.php");
-    exit();
-}
-
 // DB connection eka
 require_once __DIR__ . '/../../../config/database.php';
 
@@ -157,6 +152,7 @@ function registerPatient($conn) {
     }
 
     // ---- Form data ganna ----
+    $username          = trim($_POST['username'] ?? '');
     $first_name        = trim($_POST['first_name'] ?? '');
     $last_name         = trim($_POST['last_name'] ?? '');
     $password_plain    = $_POST['password'] ?? '';
@@ -177,8 +173,13 @@ function registerPatient($conn) {
     $status            = $_POST['status'] ?? 'active';
 
     // ---- Validation ----
-    if ($first_name === '' || $last_name === '' || $nic === '' || $phone === '' || $email === '' || $password_plain === '') {
+    if ($username === '' || $first_name === '' || $last_name === '' || $nic === '' || $phone === '' || $email === '' || $password_plain === '') {
         backWithError("Please fill all required fields.");
+    }
+
+    // Username eka simple widiyata validate karanawa (letters, numbers, dot, underscore, dash)
+    if (!preg_match('/^[A-Za-z0-9._-]{3,50}$/', $username)) {
+        backWithError("Username must be 3-50 characters and can only contain letters, numbers, dots, underscores or dashes.");
     }
 
     // '!' dana nisa welawa 00:00 wenawa (adama upan patiyekuth hari wenawa)
@@ -188,7 +189,7 @@ function registerPatient($conn) {
     }
     $age = $dobDate->diff(new DateTime('today'))->y; // DOB eken age eka hadanawa
 
-    if (!in_array($gender, ['male', 'female', 'other'], true)) {
+    if (!in_array($gender, ['male', 'female'], true)) {
         backWithError("Please select a valid gender.");
     }
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -202,6 +203,18 @@ function registerPatient($conn) {
     }
 
     try {
+        // ---- Username duplicate check (`user` table) ----
+        $check = $conn->prepare("SELECT user_id FROM `user` WHERE username = ?");
+        $check->bind_param("s", $username);
+        $check->execute();
+        $check->store_result();
+        $usernameExists = $check->num_rows > 0;
+        $check->close();
+
+        if ($usernameExists) {
+            backWithError("This username is already taken. Please choose a different username.");
+        }
+
         // ---- NIC duplicate check ----
         $check = $conn->prepare("SELECT user_id FROM `Patient` WHERE nic = ?");
         $check->bind_param("s", $nic);
@@ -228,13 +241,13 @@ function registerPatient($conn) {
         $res    = $conn->query("SELECT COALESCE(MAX(user_id), 100000) + 1 AS next_id FROM `user` FOR UPDATE");
         $userId = (int)$res->fetch_assoc()['next_id'];
 
-        // 1) `user` table ekata login details (username = NIC)
+        // 1) `user` table ekata login details (username eka staff kenek visinma danna eka)
         $stmt = $conn->prepare(
             "INSERT INTO `user`
                 (user_id, username, email, password_hash, must_change_password, phone, role, status)
              VALUES (?, ?, ?, ?, 1, ?, 'patient', 'active')"
         );
-        $stmt->bind_param("issss", $userId, $nic, $email, $password_hash, $phone);
+        $stmt->bind_param("issss", $userId, $username, $email, $password_hash, $phone);
         $stmt->execute();
         $stmt->close();
 
@@ -263,7 +276,7 @@ function registerPatient($conn) {
         try { $conn->rollback(); } catch (Throwable $ignore) {}
 
         if ($e instanceof mysqli_sql_exception && (int)$e->getCode() === 1062) {
-            backWithError("This NIC or email is already registered.");
+            backWithError("This username, NIC or email is already registered.");
         }
         backWithError("Registration failed: " . $e->getMessage());
     }

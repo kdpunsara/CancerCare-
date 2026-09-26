@@ -1,7 +1,10 @@
 <?php
 session_start();
 
-if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'staff') {
+if (
+    !isset($_SESSION['user_id']) ||
+    ($_SESSION['role'] ?? '') !== 'staff'
+) {
     header("Location: ../../../login.php");
     exit();
 }
@@ -23,18 +26,23 @@ $search = isset($_GET['search'])
 $msg = $_GET['msg'] ?? '';
 $reason = $_GET['reason'] ?? '';
 
+
 /*
 |--------------------------------------------------------------------------
 | Patient + Doctor
 |--------------------------------------------------------------------------
 */
 
-$baseSql = "SELECT p.*,
-                   CONCAT(p.first_name, ' ', p.last_name) AS full_name,
-                   CONCAT('Dr. ', d.first_name, ' ', d.last_name) AS doctor_name
-            FROM Patient p
-            LEFT JOIN Doctor d
-                ON d.user_id = p.assigned_doctor";
+$baseSql = "
+    SELECT
+        p.*,
+        CONCAT(p.first_name, ' ', p.last_name) AS full_name,
+        CONCAT('Dr. ', d.first_name, ' ', d.last_name) AS doctor_name
+    FROM Patient p
+    LEFT JOIN Doctor d
+        ON d.user_id = p.assigned_doctor
+";
+
 
 /*
 |--------------------------------------------------------------------------
@@ -48,7 +56,8 @@ if ($search !== '') {
         $baseSql . "
         WHERE CONCAT(p.first_name, ' ', p.last_name)
         LIKE CONCAT('%', ?, '%')
-        ORDER BY p.first_name ASC, p.last_name ASC"
+        ORDER BY p.first_name ASC, p.last_name ASC
+        "
     );
 
     if (!$stmt) {
@@ -64,13 +73,15 @@ if ($search !== '') {
 
     $result = $conn->query(
         $baseSql . "
-        ORDER BY p.first_name ASC, p.last_name ASC"
+        ORDER BY p.first_name ASC, p.last_name ASC
+        "
     );
 
     if (!$result) {
         die("Query Failed: " . $conn->error);
     }
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -83,9 +94,11 @@ $doctors = [];
 try {
 
     $dres = $conn->query(
-        "SELECT user_id, first_name, last_name
-         FROM Doctor
-         ORDER BY first_name, last_name"
+        "
+        SELECT user_id, first_name, last_name
+        FROM Doctor
+        ORDER BY first_name, last_name
+        "
     );
 
     while ($d = $dres->fetch_assoc()) {
@@ -100,7 +113,6 @@ try {
 ?>
 
 <!DOCTYPE html>
-
 <html lang="en">
 
 <head>
@@ -126,48 +138,11 @@ try {
 
     <style>
 
-        .icon {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            background-repeat: no-repeat;
-            background-position: center;
-            background-size: contain;
-            flex-shrink: 0;
-        }
-
-        .nav-item .icon {
-            width: 18px;
-            height: 18px;
-        }
-
-        .icon-dashboard {
-            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='3' width='7' height='9' rx='1.5'/><rect x='14' y='3' width='7' height='5' rx='1.5'/><rect x='14' y='12' width='7' height='9' rx='1.5'/><rect x='3' y='16' width='7' height='5' rx='1.5'/></svg>");
-        }
-
-        .icon-profile {
-            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='8' r='4'/><path d='M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7'/></svg>");
-        }
-
-        .icon-register {
-            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M15 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2'/><circle cx='8.5' cy='7' r='4'/><path d='M20 8v6M17 11h6'/></svg>");
-        }
-
-        .icon-appointments {
-            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='5' width='18' height='16' rx='2'/><path d='M16 3v4M8 3v4M3 10h18'/></svg>");
-        }
-
-        .icon-records {
-            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M7 3h7l4 4v14H7z'/><path d='M9 12h6M9 16h6M9 8h2'/></svg>");
-        }
-
-        .icon-doctor {
-            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='7' r='4'/><path d='M5 21v-2a7 7 0 0 1 14 0v2'/><path d='M17 16l2 2 4-4'/></svg>");
-        }
-
-        .icon-benefactor {
-            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='9' cy='7' r='4'/><path d='M2 21v-2a7 7 0 0 1 14 0v2'/><path d='M16 11h6M19 8v6'/></svg>");
-        }
+        /*
+        |--------------------------------------------------------------------------
+        | Patient Page Styles
+        |--------------------------------------------------------------------------
+        */
 
         .search-info {
             margin: 15px 0;
@@ -211,180 +186,44 @@ try {
 
 </head>
 
+
 <body>
 
 <div class="app">
 
+
     <!-- =====================================================
-         SIDEBAR
-    ====================================================== -->
+         SHARED SIDEBAR
+         ===================================================== -->
 
-    <aside
-        class="sidebar"
-        id="sidebar"
-    >
+    <?php
 
-        <div class="sidebar-header">
+    /*
+     * Tell sidebar.php that this is the Patients page.
+     * sidebar.php will automatically show:
+     *
+     * Logged-in staff name
+     * Staff initials
+     * Patients = active
+     */
 
-            <div class="logo">
+    $activePage = 'patients';
 
-                <div class="logo-icon">
-                    ❤
-                </div>
+    require __DIR__ . '/sidebar.php';
 
-                <div>
-
-                    Cancer Care
-
-                    <span class="logo-sub">
-                        Cancer Patient Care
-                    </span>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <nav class="sidebar-nav">
-
-            <div class="nav-section">
-                Navigation
-            </div>
-
-
-            <a
-                href="staff_dashboard.php"
-                class="nav-item"
-            >
-
-                <span class="icon icon-dashboard"></span>
-
-                Dashboard
-
-            </a>
-
-
-            <a
-                href="staff_patient.php"
-                class="nav-item active"
-            >
-
-                <span class="icon icon-profile"></span>
-
-                Patients
-
-            </a>
-
-
-            <a
-                href="Register_patient.php"
-                class="nav-item"
-            >
-
-                <span class="icon icon-register"></span>
-
-                Register Patient
-
-            </a>
-
-
-            <a
-                href="staff_appointment.php"
-                class="nav-item"
-            >
-
-                <span class="icon icon-appointments"></span>
-
-                Appointments
-
-            </a>
-
-
-            <a
-                href="medical_reports.php"
-                class="nav-item"
-            >
-
-                <span class="icon icon-records"></span>
-
-                Medical Reports
-
-            </a>
-
-
-            <a
-                href="doctor_availability.php"
-                class="nav-item"
-            >
-
-                <span class="icon icon-doctor"></span>
-
-                Doctor Availability
-
-            </a>
-
-
-            <a
-                href="benefactor.php"
-                class="nav-item"
-            >
-
-                <span class="icon icon-benefactor"></span>
-
-                Benefactor
-
-            </a>
-
-            <a
-                href="staff_profile.php"
-                class="nav-item"
-            >
-
-                <span class="icon icon-profile"></span>
-
-                My Profile
-
-            </a>
-
-        </nav>
-
-
-        <div class="sidebar-footer">
-
-            <div class="user-card">
-
-                <div class="user-avatar">
-                    NP
-                </div>
-
-                <div class="user-info">
-
-                    <strong>
-                        Nimali Perera
-                    </strong>
-
-                    <span>
-                        Medical Staff
-                    </span>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </aside>
+    ?>
 
 
     <!-- =====================================================
          MAIN
-    ====================================================== -->
+         ===================================================== -->
 
     <main class="main">
 
-        <!-- TOP BAR -->
+
+        <!-- =====================================================
+             TOP BAR
+             ===================================================== -->
 
         <header class="topbar">
 
@@ -403,6 +242,9 @@ try {
 
             <div class="topbar-right">
 
+
+                <!-- TOP SEARCH -->
+
                 <form
                     method="GET"
                     action="staff_patient.php"
@@ -419,12 +261,17 @@ try {
                 </form>
 
 
-                <a href="../../../logout.php"
+                <!-- SIGN OUT -->
+
+                <a
+                    href="../../../logout.php"
                     class="btn btn-outline"
                 >
                     Sign Out
                 </a>
 
+
+                <!-- SIDEBAR TOGGLE -->
 
                 <button
                     type="button"
@@ -441,13 +288,19 @@ try {
 
         <!-- =====================================================
              CONTENT
-        ====================================================== -->
+             ===================================================== -->
 
         <div class="content">
 
-            <!-- SEARCH -->
+
+            <!-- =================================================
+                 SEARCH + REGISTER
+                 ================================================= -->
 
             <div class="page-toolbar">
+
+
+                <!-- SEARCH -->
 
                 <form
                     method="GET"
@@ -467,6 +320,8 @@ try {
                 </form>
 
 
+                <!-- REGISTER -->
+
                 <a
                     href="Register_patient.php"
                     class="btn btn-primary"
@@ -477,7 +332,9 @@ try {
             </div>
 
 
-            <!-- MESSAGES -->
+            <!-- =================================================
+                 MESSAGES
+                 ================================================= -->
 
             <?php if ($msg === 'registered'): ?>
 
@@ -508,7 +365,9 @@ try {
             <?php endif; ?>
 
 
-            <!-- SEARCH INFO -->
+            <!-- =================================================
+                 SEARCH INFO
+                 ================================================= -->
 
             <?php if ($search !== ''): ?>
 
@@ -519,7 +378,6 @@ try {
                     <strong>
                         "<?php echo e($search); ?>"
                     </strong>
-
 
                     <a
                         href="staff_patient.php"
@@ -535,7 +393,7 @@ try {
 
             <!-- =================================================
                  PATIENT TABLE
-            ================================================== -->
+                 ================================================= -->
 
             <div class="widget">
 
@@ -578,16 +436,26 @@ try {
 
                         <tbody id="patientTableBody">
 
+
                         <?php if ($result && $result->num_rows > 0): ?>
+
 
                             <?php while ($row = $result->fetch_assoc()): ?>
 
+
                                 <?php
+
+                                /*
+                                |--------------------------------------------------------------------------
+                                | Patient Name
+                                |--------------------------------------------------------------------------
+                                */
 
                                 $fullName =
                                     $row['full_name'] ?? '';
 
                                 $initials = '';
+
 
                                 foreach (
                                     preg_split(
@@ -610,6 +478,7 @@ try {
 
                                 }
 
+
                                 $avatar =
                                     mb_substr(
                                         $initials,
@@ -617,24 +486,52 @@ try {
                                         2
                                     );
 
+
+                                /*
+                                |--------------------------------------------------------------------------
+                                | Patient ID
+                                |--------------------------------------------------------------------------
+                                */
+
                                 $patientId =
                                     $row['user_id'] ?? '';
+
+
+                                /*
+                                |--------------------------------------------------------------------------
+                                | Doctor
+                                |--------------------------------------------------------------------------
+                                */
 
                                 $doctorVal =
                                     $row['doctor_name'] ?? '';
 
+
+                                /*
+                                |--------------------------------------------------------------------------
+                                | Status
+                                |--------------------------------------------------------------------------
+                                */
+
                                 $status =
                                     $row['status'] ?? '';
+
 
                                 $statusCls =
                                     strtolower(
                                         preg_replace(
-                                            '/[^a-zA-Z0-9_-]/',
+                                            '/[^a-zA-Z0-9\_-]/',
                                             '',
                                             $status
                                         )
                                     );
 
+
+                                /*
+                                |--------------------------------------------------------------------------
+                                | Patient JSON
+                                |--------------------------------------------------------------------------
+                                */
 
                                 $data = e(
                                     json_encode(
@@ -672,9 +569,14 @@ try {
                                 ?>
 
 
+                                <!-- =================================================
+                                     PATIENT ROW
+                                     ================================================= -->
+
                                 <tr
                                     id="patient-row-<?php echo e($patientId); ?>"
                                 >
+
 
                                     <!-- PATIENT -->
 
@@ -817,6 +719,7 @@ try {
 
                                     </td>
 
+
                                 </tr>
 
 
@@ -824,6 +727,7 @@ try {
 
 
                         <?php else: ?>
+
 
                             <tr id="noPatientRow">
 
@@ -845,7 +749,6 @@ try {
                                             "<?php echo e($search); ?>"
                                         </strong>
 
-
                                     <?php else: ?>
 
                                         No patients found.
@@ -855,6 +758,7 @@ try {
                                 </td>
 
                             </tr>
+
 
                         <?php endif; ?>
 
@@ -870,7 +774,7 @@ try {
 
             <!-- =================================================
                  PATIENT DETAILS CARD
-            ================================================== -->
+                 ================================================= -->
 
             <form
                 class="form-card"
@@ -878,6 +782,7 @@ try {
                 method="POST"
                 action="medical_actions.php"
             >
+
 
                 <input
                     type="hidden"
@@ -901,9 +806,12 @@ try {
                 </div>
 
 
-                <!-- PATIENT DETAILS -->
+                <!-- =================================================
+                     PATIENT DETAILS
+                     ================================================= -->
 
                 <div class="form-section">
+
 
                     <!-- FIRST NAME -->
 
@@ -972,7 +880,6 @@ try {
                             Cancer Type
                         </label>
 
-
                         <select
                             id="fCancer"
                             name="cancer_type"
@@ -1025,7 +932,6 @@ try {
                             Cancer Stage
                         </label>
 
-
                         <select
                             id="fStage"
                             name="stage"
@@ -1066,7 +972,6 @@ try {
                             Status
                         </label>
 
-
                         <select
                             id="fStatus"
                             name="status"
@@ -1102,7 +1007,6 @@ try {
                         <label>
                             Assigned Doctor
                         </label>
-
 
                         <select
                             id="fDoctor"
@@ -1148,7 +1052,7 @@ try {
 
                 <!-- =================================================
                      BUTTONS
-                ================================================== -->
+                     ================================================= -->
 
                 <div
                     style="
@@ -1158,6 +1062,7 @@ try {
                         padding:24px 0 8px;
                     "
                 >
+
 
                     <!-- CLOSE -->
 
@@ -1199,10 +1104,12 @@ try {
                         Update
                     </button>
 
+
                 </div>
 
 
             </form>
+
 
         </div>
 
@@ -1211,7 +1118,12 @@ try {
 </div>
 
 
+<!-- =========================================================
+     JAVASCRIPT
+     ========================================================= -->
+
 <script>
+
 
 /*
 |--------------------------------------------------------------------------
@@ -1223,6 +1135,7 @@ const card =
     document.getElementById(
         'patientDetailsCard'
     );
+
 
 let currentPatientId = null;
 
@@ -1306,9 +1219,11 @@ function openCard(btn)
     document.getElementById(
         'cardSub'
     ).innerText =
-        (p.id
-            ? p.id + ' · '
-            : '')
+        (
+            p.id
+                ? p.id + ' · '
+                : ''
+        )
         + 'Age '
         + p.age;
 
@@ -1344,7 +1259,7 @@ function closeCard()
 
 /*
 |--------------------------------------------------------------------------
-| Sidebar
+| Sidebar Toggle
 |--------------------------------------------------------------------------
 */
 
@@ -1384,6 +1299,7 @@ if (
 </body>
 
 </html>
+
 
 <?php
 
