@@ -1,6 +1,36 @@
 <?php
 require_once __DIR__ . '/../patient_data.php';
 
+$appointments_are_demo = count($appointments) === 0;
+if ($appointments_are_demo) {
+  $appointments = array(
+    array(
+      'appointment_date' => date('Y-m-d', strtotime('+7 days')),
+      'appointment_time' => '09:30:00',
+      'reason' => 'Oncology follow-up',
+      'doctor_first_name' => 'Nimal',
+      'doctor_last_name' => 'Perera',
+      'appointment_status' => 'upcoming'
+    ),
+    array(
+      'appointment_date' => date('Y-m-d', strtotime('+14 days')),
+      'appointment_time' => '11:00:00',
+      'reason' => 'Blood test review',
+      'doctor_first_name' => 'Amara',
+      'doctor_last_name' => 'Silva',
+      'appointment_status' => 'upcoming'
+    ),
+    array(
+      'appointment_date' => date('Y-m-d', strtotime('-14 days')),
+      'appointment_time' => '10:15:00',
+      'reason' => 'Treatment review',
+      'doctor_first_name' => 'Nimal',
+      'doctor_last_name' => 'Perera',
+      'appointment_status' => 'completed'
+    )
+  );
+}
+
 $stmt = $conn->prepare(
     "SELECT reminder_id, reminder_title, reminder_date, reminder_time
      FROM Reminder
@@ -18,7 +48,7 @@ $reminders = $stmt->get_result();
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Appointments — Apeksha OncoCare</title>
 <link rel="stylesheet" href="../../../public/css/base.css?v=3">
-<link rel="stylesheet" href="../../../public/css/appointments.css">
+<link rel="stylesheet" href="../../../public/css/appointments.css?v=2">
 </head>
 <body>
 
@@ -142,6 +172,17 @@ $reminders = $stmt->get_result();
       </div>
 
 
+      <form id="appointment-search-form" class="appointment-search">
+        <div class="appointment-search-controls">
+          <input id="appointment-search" type="search" placeholder="Search by doctor, reason, or date..." aria-label="Search appointments">
+          <button class="appointment-search-button" type="submit">Search</button>
+        </div>
+        <p id="appointment-search-status" class="appointment-search-status" role="status" aria-live="polite"></p>
+        <?php if ($appointments_are_demo): ?>
+          <p class="appointment-demo-note">Sample appointments are shown because no appointment records are available.</p>
+        <?php endif; ?>
+      </form>
+
       <div class="card list-card wide-card">
         <div class="list-card-header">
           <h3>Upcoming Appointments</h3>
@@ -193,6 +234,28 @@ $reminders = $stmt->get_result();
   </main>
 </div>
 
+<script>
+const appointmentSearchForm = document.getElementById('appointment-search-form');
+const appointmentSearch = document.getElementById('appointment-search');
+const appointmentSearchStatus = document.getElementById('appointment-search-status');
+const appointmentItems = Array.from(document.querySelectorAll('.appointment-item'));
+
+appointmentSearchForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  const query = appointmentSearch.value.trim().toLocaleLowerCase();
+  let visibleCount = 0;
+
+  appointmentItems.forEach((item) => {
+    const matches = item.textContent.toLocaleLowerCase().includes(query);
+    item.hidden = !matches;
+    visibleCount += matches ? 1 : 0;
+  });
+
+  appointmentSearchStatus.textContent = query && visibleCount === 0
+    ? 'No appointments match your search.'
+    : '';
+});
+</script>
 
 </body>
 </html>
