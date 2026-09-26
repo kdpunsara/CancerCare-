@@ -1,47 +1,10 @@
 <?php
-require_once __DIR__ . '/../patient_data.php';
 $search = trim(isset($_GET['q']) ? $_GET['q'] : '');
-
-$countSql = "
-    SELECT
-        COUNT(*) AS total_medications,
-    SUM(CASE WHEN stock_quantity > 20 THEN 1 ELSE 0 END) AS in_stock,
-    SUM(CASE WHEN stock_quantity BETWEEN 1 AND 20 THEN 1 ELSE 0 END) AS low_stock,
-    SUM(CASE WHEN stock_quantity <= 0 THEN 1 ELSE 0 END) AS out_of_stock
-    FROM Medicine
-";
-$countResult = $conn->query($countSql);
-$counts = $countResult->fetch_assoc();
-
-$total_medications = (int)(isset($counts['total_medications']) ? $counts['total_medications'] : 0);
-$in_stock = (int)(isset($counts['in_stock']) ? $counts['in_stock'] : 0);
-$low_stock = (int)(isset($counts['low_stock']) ? $counts['low_stock'] : 0);
-$out_of_stock = (int)(isset($counts['out_of_stock']) ? $counts['out_of_stock'] : 0);
-
-if ($search !== '') {
-    $stmt = $conn->prepare(
-      "SELECT medicine_id, medicine_name, category,
-        stock_quantity AS quantity,
-        'Main Pharmacy' AS pharmacy_location,
-        NULL AS last_updated
-         FROM Medicine
-         WHERE medicine_name LIKE ?
-         ORDER BY medicine_name"
-    );
-    $like = "%" . $search . "%";
-    $stmt->bind_param("s", $like);
-    $stmt->execute();
-    $medicines = $stmt->get_result();
-} else {
-    $medicines = $conn->query(
-      "SELECT medicine_id, medicine_name, category,
-        stock_quantity AS quantity,
-        'Main Pharmacy' AS pharmacy_location,
-        NULL AS last_updated
-         FROM Medicine
-         ORDER BY medicine_name"
-    );
-}
+$total_medications = 0;
+$in_stock = 0;
+$low_stock = 0;
+$out_of_stock = 0;
+$medicines = [];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -72,7 +35,7 @@ if ($search !== '') {
           <span class="icon icon-dashboard" aria-hidden="true"></span>
           <span class="nav-text">My Dashboard</span>
         </a></li>
-        <li><a href="patient_profile.php" class="nav-item" title="My Profile">
+        <li><a href="patient_profile_edit.php" class="nav-item" title="My Profile">
           <span class="icon icon-profile" aria-hidden="true"></span>
           <span class="nav-text">My Profile</span>
         </a></li>
@@ -126,50 +89,11 @@ if ($search !== '') {
         </div>
       </div>
       <div class="topbar-actions">
-        <button class="icon-btn" aria-label="Notifications">
-          <span class="icon icon-bell" aria-hidden="true"></span>
-          <span class="dot"></span>
-        </button>
         <a href="../../../logout.php" class="signout-btn">Sign Out</a>
       </div>
     </header>
 
     <section class="content">
-
-      <div class="stat-grid">
-        <div class="card stat-card">
-          <div class="stat-icon stat-icon-blue">
-            <span class="icon icon-drug" aria-hidden="true"></span>
-          </div>
-          <p class="stat-label">Total Medications</p>
-          <p class="stat-value"><?= $total_medications ?></p>
-          <p class="stat-sub">Tracked at this pharmacy</p>
-        </div>
-        <div class="card stat-card">
-          <div class="stat-icon stat-icon-teal">
-            <span class="icon icon-drug" aria-hidden="true"></span>
-          </div>
-          <p class="stat-label">In Stock</p>
-          <p class="stat-value"><?= $in_stock ?></p>
-          <p class="stat-sub">Ready for dispensing</p>
-        </div>
-        <div class="card stat-card">
-          <div class="stat-icon stat-icon-amber">
-            <span class="icon icon-drug" aria-hidden="true"></span>
-          </div>
-          <p class="stat-label">Low Stock</p>
-          <p class="stat-value"><?= $low_stock ?></p>
-          <p class="stat-sub">Reorder in progress</p>
-        </div>
-        <div class="card stat-card">
-          <div class="stat-icon stat-icon-yellow">
-            <span class="icon icon-drug" aria-hidden="true"></span>
-          </div>
-          <p class="stat-label">Out of Stock</p>
-          <p class="stat-value"><?= $out_of_stock ?></p>
-          <p class="stat-sub">Expected 20 Jul 2026</p>
-        </div>
-      </div>
 
       <div class="card list-card wide-card">
         <div class="header-actions-row">
@@ -198,12 +122,12 @@ if ($search !== '') {
               </tr>
             </thead>
             <tbody>
-              <?php if ($medicines->num_rows === 0): ?>
+              <?php if (count($medicines) === 0): ?>
                 <tr>
                   <td colspan="6">No medications found.</td>
                 </tr>
               <?php else: ?>
-                <?php while ($medicine = $medicines->fetch_assoc()): ?>
+                <?php foreach ($medicines as $medicine): ?>
                   <?php
                     $quantity = (int)$medicine['quantity'];
                     if ($quantity <= 0) {
@@ -225,7 +149,7 @@ if ($search !== '') {
                     <td><?= htmlspecialchars(isset($medicine['last_updated']) ? $medicine['last_updated'] : '') ?></td>
                     <td><span class="badge <?= $badge ?>"><?= $status ?></span></td>
                   </tr>
-                <?php endwhile; ?>
+                <?php endforeach; ?>
               <?php endif; ?>
             </tbody>
           </table>

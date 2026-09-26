@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital Operations - CancerCare</title>
+    <link rel="stylesheet" href="../../../public/css/base.css">
+</head>
+<body>
+<div class="app">
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-mark">CC</div>
+            <div class="brand-text">
+                <h1>CancerCare</h1>
+                <p>Admin Portal</p>
+            </div>
+        </div>
+        <nav class="nav">
+            <p class="nav-label">System Administration</p>
+            <ul>
+                <li><a href="admin_dashboard.php" class="nav-item"><span class="icon icon-dashboard" aria-hidden="true"></span><span class="nav-text">Dashboard</span></a></li>
+                <li><a href="user_management.php" class="nav-item"><span class="icon icon-profile" aria-hidden="true"></span><span class="nav-text">User Management</span></a></li>
+                <li><a href="operations.html" class="nav-item active"><span class="icon icon-appointments" aria-hidden="true"></span><span class="nav-text">Operations</span></a></li>
+                <li><a href="analytics.html" class="nav-item"><span class="icon icon-records" aria-hidden="true"></span><span class="nav-text">Reports &amp; Analytics</span></a></li>
+                <li><a href="admin_profile.php" class="nav-item"><span class="icon icon-profile" aria-hidden="true"></span><span class="nav-text">My Profile</span></a></li>
+            </ul>
+        </nav>
+        <div class="sidebar-user">
+            <div class="avatar">AD</div>
+            <div>
+                <p class="user-name">System Admin</p>
+                <p class="user-role">Administrator</p>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <div class="topbar-left">
+                <div>
+                    <h2>Hospital Operations</h2>
+                    <p class="date">Track capacity and department workflow</p>
+                </div>
+            </div>
+            <div class="topbar-actions">
+                <a href="../../../logout.php" class="signout-btn">Sign Out</a>
+            </div>
+        </header>
+
+        <section class="content">
+            <div class="card list-card wide-card">
+                <div class="list-card-header">
+                    <div>
+                        <h3>Live Operations Overview</h3>
+                        <p class="table-caption">Current department capacity and staffing snapshot.</p>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Department</th>
+                                <th>Bed Capacity</th>
+                                <th>Current Occupancy</th>
+                                <th>On-Duty Staff</th>
+                                <th>Operational Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Inpatient Ward A</strong></td>
+                                <td>50 Beds</td>
+                                <td>42 Occupied (84%)</td>
+                                <td>8 Nurses / 2 Doctors</td>
+                                <td><span class="badge badge-active">Normal</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Chemotherapy Unit</strong></td>
+                                <td>20 Beds</td>
+                                <td>19 Occupied (95%)</td>
+                                <td>5 Nurses / 1 Specialist</td>
+                                <td><span class="badge badge-pending">High Volume</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+</body>
+</html>

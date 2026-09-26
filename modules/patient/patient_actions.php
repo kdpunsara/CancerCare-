@@ -55,6 +55,7 @@ case 'register_patient':
 
 case 'update_profile':
     $email=trim(isset($_POST['email']) ? $_POST['email'] : ''); $phone=trim(isset($_POST['phone']) ? $_POST['phone'] : '');
+    $password=isset($_POST['password']) ? $_POST['password'] : ''; $confirm=isset($_POST['confirm_password']) ? $_POST['confirm_password'] : '';
     $full_name=trim(isset($_POST['full_name']) ? $_POST['full_name'] : '');
     $name_parts=preg_split('/\s+/', $full_name, 2);
     $first=trim(isset($name_parts[0]) ? $name_parts[0] : ''); $last=trim(isset($name_parts[1]) ? $name_parts[1] : '');
@@ -64,14 +65,27 @@ case 'update_profile':
     if ($email==='' || $first==='' || $last==='' || $dob==='' || $nic==='') {
         header("Location: views/patient_profile_edit.php?error=invalid_profile"); exit();
     }
+    if ($password !== '' && strlen($password) < 8) {
+        header("Location: views/patient_profile_edit.php?error=password_short"); exit();
+    }
+    if ($password !== $confirm) {
+        header("Location: views/patient_profile_edit.php?error=password_mismatch"); exit();
+    }
     $conn->begin_transaction();
     try {
-        $st=$conn->prepare("UPDATE User SET email=?, phone=? WHERE user_id=?");
-        $st->bind_param("ssi",$email,$phone,$patient_id); $st->execute();
+        if ($password !== '') {
+            $password_hash = password_hash($password, PASSWORD_DEFAULT);
+            $st=$conn->prepare("UPDATE User SET email=?, phone=?, password_hash=?, must_change_password=0 WHERE user_id=?");
+            $st->bind_param("sssi",$email,$phone,$password_hash,$patient_id);
+        } else {
+            $st=$conn->prepare("UPDATE User SET email=?, phone=? WHERE user_id=?");
+            $st->bind_param("ssi",$email,$phone,$patient_id);
+        }
+        $st->execute();
         $st=$conn->prepare("UPDATE Patient SET nic=?, first_name=?, last_name=?, dob=?, gender=?, address=?, city=? WHERE user_id=?");
         $st->bind_param("sssssssi",$nic,$first,$last,$dob,$gender,$address,$city,$patient_id); $st->execute();
         $conn->commit();
-        header("Location: views/patient_profile.php?msg=profile_updated");
+        header("Location: views/patient_profile_edit.php?msg=profile_updated");
     } catch (Exception $e) {
         $conn->rollback();
         header("Location: views/patient_profile_edit.php?error=update_failed");

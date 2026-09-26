@@ -46,6 +46,8 @@ $stmt_history = $conn->prepare($sql_history);
 $stmt_history->bind_param("i", $benefactor_id);
 $stmt_history->execute();
 $donations = $stmt_history->get_result()->fetch_all(MYSQLI_ASSOC);
+$history_message = $_GET['msg'] ?? '';
+$history_error = $_GET['error'] ?? '';
 
 // Helper to format status badges
 function getDonationBadge($status) {
@@ -88,6 +90,16 @@ function getDonationBadge($status) {
 
             <div class="content">
 
+                <?php if ($history_message === 'donation_deleted'): ?>
+                    <div class="card panel" style="border-left: 4px solid var(--teal); margin-bottom: 20px;">
+                        <p class="panel-note" style="color: var(--teal);">Donation deleted successfully.</p>
+                    </div>
+                <?php elseif ($history_error === 'donation_not_pending'): ?>
+                    <div class="card panel" style="border-left: 4px solid var(--red); margin-bottom: 20px;">
+                        <p class="panel-note" style="color: var(--red);">Only pending donations can be deleted.</p>
+                    </div>
+                <?php endif; ?>
+
                 <!-- Statistics Cards -->
                 <div class="stat-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 24px;">
                     <div class="card stat-card">
@@ -119,12 +131,13 @@ function getDonationBadge($status) {
                                     <th>Details</th>
                                     <th>Date</th>
                                     <th>Status</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php if (empty($donations)): ?>
                                     <tr>
-                                        <td colspan="6" style="text-align: center; padding: 30px; color: var(--text-muted);">
+                                        <td colspan="7" style="text-align: center; padding: 30px; color: var(--text-muted);">
                                             You haven't made any donations yet. 
                                             <a href="make_donation.php" style="color: var(--blue); font-weight: 600;">Make your first donation!</a>
                                         </td>
@@ -152,6 +165,17 @@ function getDonationBadge($status) {
                                                 <span class="badge <?php echo getDonationBadge($don['status']); ?>">
                                                     <?php echo htmlspecialchars($don['status']); ?>
                                                 </span>
+                                            </td>
+                                            <td>
+                                                <?php if ($don['status'] === 'Pending Verification'): ?>
+                                                    <form method="POST" action="../benefactor_actions.php" onsubmit="return confirm('Delete this pending donation?');">
+                                                        <input type="hidden" name="action" value="delete_donation">
+                                                        <input type="hidden" name="donation_id" value="<?php echo (int) $don['donation_id']; ?>">
+                                                        <button type="submit" class="btn-secondary" style="padding: 6px 10px; color: var(--red);">Delete</button>
+                                                    </form>
+                                                <?php else: ?>
+                                                    <span style="color: var(--text-muted);">—</span>
+                                                <?php endif; ?>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>

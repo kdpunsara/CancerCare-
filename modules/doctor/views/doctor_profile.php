@@ -9,7 +9,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'doctor') {
 
 
 $doctor_id = $_SESSION['user_id'];
-$stmt_profile = $conn->prepare("SELECT u.username, u.email, u.phone,
+$stmt_profile = $conn->prepare("SELECT u.user_id, u.username, u.email, u.phone,
                                       d.first_name, d.last_name, d.specialization, d.qualification, d.license_no
                                FROM User u
                                INNER JOIN Doctor d ON u.user_id = d.user_id
@@ -66,6 +66,10 @@ if (!$profile) {
                     <form method="POST" action="../doctor_actions.php" class="form-grid">
                         <input type="hidden" name="action" value="update_profile">
 
+                        <div class="form-field">
+                            <label>User ID</label>
+                            <input type="text" value="<?php echo (int) $profile['user_id']; ?>" readonly>
+                        </div>
                         <div class="form-field">
                             <label>Username</label>
                             <input type="text" value="<?php echo htmlspecialchars($profile['username']); ?>" disabled>

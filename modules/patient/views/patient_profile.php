@@ -31,7 +31,7 @@ $full_name = trim($patient['first_name'].' '.$patient['last_name']);
           <span class="icon icon-dashboard" aria-hidden="true"></span>
           <span class="nav-text">My Dashboard</span>
         </a></li>
-        <li><a href="patient_profile.php" class="nav-item active" title="My Profile">
+        <li><a href="patient_profile_edit.php" class="nav-item active" title="My Profile">
           <span class="icon icon-profile" aria-hidden="true"></span>
           <span class="nav-text">My Profile</span>
         </a></li>
@@ -85,10 +85,6 @@ $full_name = trim($patient['first_name'].' '.$patient['last_name']);
         </div>
       </div>
       <div class="topbar-actions">
-        <button class="icon-btn" aria-label="Notifications">
-          <span class="icon icon-bell" aria-hidden="true"></span>
-          <span class="dot"></span>
-        </button>
         <a href="../../../logout.php" class="signout-btn">Sign Out</a>
       </div>
     </header>
@@ -100,7 +96,7 @@ $full_name = trim($patient['first_name'].' '.$patient['last_name']);
           <div class="profile-avatar">SJ</div>
           <div>
             <h3><?= htmlspecialchars($full_name) ?></h3>
-            <p class="profile-sub">Patient ID: <strong>P-1001</strong> &nbsp;·&nbsp; Registered 12 Jan 2026</p>
+            <p class="profile-sub">Patient ID: <strong>P-<?php echo (int) $patient['user_id']; ?></strong> &nbsp;·&nbsp; Registered 12 Jan 2026</p>
           </div>
           <a href="patient_profile_edit.php" class="edit-btn">Edit Profile</a>
         </div>

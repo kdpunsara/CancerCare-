@@ -1,4 +1,11 @@
 <?php
+session_start();
+
+if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'staff') {
+    header("Location: ../../../login.php");
+    exit();
+}
+
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -735,165 +742,7 @@ $reason = $_GET['reason'] ?? '';
 <div class="app">
 
 
-    <!-- =====================================================
-         SIDEBAR
-    ===================================================== -->
-
-    <aside class="sidebar" id="sidebar">
-
-
-        <div class="sidebar-header">
-
-            <div class="logo">
-
-                <div class="logo-icon">
-                    ❤
-                </div>
-
-                <div>
-
-                    Cancer care
-
-                    <span class="logo-sub">
-                        Cancer Patient Care
-                    </span>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <nav class="sidebar-nav">
-
-
-            <div class="nav-section">
-                NAVIGATION
-            </div>
-
-
-            <a
-                href="staff_dashboard.php"
-                class="nav-item"
-            >
-
-                <span class="icon icon-dashboard"></span>
-
-                Dashboard
-
-            </a>
-
-
-            <a
-                href="staff_patient.php"
-                class="nav-item"
-            >
-
-                <span class="icon icon-profile"></span>
-
-                Patients
-
-            </a>
-
-
-            <a
-                href="Register_patient.php"
-                class="nav-item"
-            >
-
-                <span class="icon icon-register"></span>
-
-                Register Patient
-
-            </a>
-
-
-            <a
-                href="staff_appointment.php"
-                class="nav-item active"
-            >
-
-                <span class="icon icon-appointments"></span>
-
-                Appointments
-
-            </a>
-
-
-            <a
-                href="medical_reports.php"
-                class="nav-item"
-            >
-
-                <span class="icon icon-records"></span>
-
-                Medical Reports
-
-            </a>
-
-
-            <a
-                href="doctor_availability.php"
-                class="nav-item"
-            >
-
-                <span class="icon icon-doctor"></span>
-
-                Doctor Availability
-
-            </a>
-
-
-            <a
-                href="benefactor.php"
-                class="nav-item"
-            >
-
-                <span class="icon icon-benefactor"></span>
-
-                Benefactor
-
-            </a>
-
-            <a
-                href="staff_profile.php"
-                class="nav-item"
-            >
-                <span class="icon icon-profile"></span>
-                My Profile
-            </a>
-
-
-        </nav>
-
-
-        <div class="sidebar-footer">
-
-            <div class="user-card">
-
-                <div class="user-avatar">
-                    NP
-                </div>
-
-                <div class="user-info">
-
-                    <strong>
-                        Nimali Perera
-                    </strong>
-
-                    <span>
-                        Medical Staff
-                    </span>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-    </aside>
+<?php $activePage = 'appointments'; require __DIR__ . '/sidebar.php'; ?>
 
 
     <!-- =====================================================

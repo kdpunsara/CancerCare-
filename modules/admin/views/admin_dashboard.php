@@ -69,14 +69,14 @@ $monthly_reports = intval($stmt_rep->get_result()->fetch_assoc()['c']);
                             </div>
                             <span class="link-action">Open</span>
                         </a>
-                        <a class="appointment-item" href="operations.php">
+                        <a class="appointment-item" href="operations.html">
                             <div class="appointment-info">
                                 <p class="appointment-name">Monitor Operations</p>
                                 <p class="appointment-desc">Track transport schedules, donations and pharmacy activity</p>
                             </div>
                             <span class="link-action">Open</span>
                         </a>
-                        <a class="appointment-item" href="analytics.php">
+                        <a class="appointment-item" href="analytics.html">
                             <div class="appointment-info">
                                 <p class="appointment-name">Generate Analytics</p>
                                 <p class="appointment-desc">View usage, medical report and donation analytics</p>

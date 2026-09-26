@@ -37,7 +37,7 @@ $latest_record = count($medical_records) ? $medical_records[0] : null;
           <span class="icon icon-dashboard" aria-hidden="true"></span>
           <span class="nav-text">My Dashboard</span>
         </a></li>
-        <li><a href="patient_profile.php" class="nav-item" title="My Profile">
+        <li><a href="patient_profile_edit.php" class="nav-item" title="My Profile">
           <span class="icon icon-profile" aria-hidden="true"></span>
           <span class="nav-text">My Profile</span>
         </a></li>
@@ -91,10 +91,6 @@ $latest_record = count($medical_records) ? $medical_records[0] : null;
         </div>
       </div>
       <div class="topbar-actions">
-        <button class="icon-btn" aria-label="Notifications">
-          <span class="icon icon-bell" aria-hidden="true"></span>
-          <span class="dot"></span>
-        </button>
         <a href="../../../logout.php" class="signout-btn">Sign Out</a>
       </div>
     </header>
@@ -169,53 +165,27 @@ $latest_record = count($medical_records) ? $medical_records[0] : null;
           </div>
 
           <ul class="appointment-list">
-            <li class="appointment-item confirmed">
-              <div class="appointment-time">
-                <span class="time">09:00</span>
-                <span class="date">Jul 5, 2026</span>
-              </div>
-              <div class="appointment-info">
-                <p class="appointment-name">Sandun Jayasekara</p>
-                <p class="appointment-desc">Dr. Fernando · Follow-up</p>
-              </div>
-              <span class="status status-confirmed">confirmed</span>
-            </li>
-
-            <li class="appointment-item pending">
-              <div class="appointment-time">
-                <span class="time">11:00</span>
-                <span class="date">Jul 10, 2026</span>
-              </div>
-              <div class="appointment-info">
-                <p class="appointment-name">Sandun Jayasekara</p>
-                <p class="appointment-desc">Dr. Fernando · Lab Review</p>
-              </div>
-              <span class="status status-pending">pending</span>
-            </li>
-          </ul>
-        </div>
-
-        <div class="card list-card">
-          <div class="list-card-header">
-            <h3>Notifications</h3>
-          </div>
-
-          <ul class="notification-list">
-            <li class="notification-item info">
-              <span class="icon icon-bell-small" aria-hidden="true"></span>
-              <div>
-                <p class="notification-text">Your appointment on Jul 5 at 09:00 has been confirmed.</p>
-                <p class="notification-time">7/3/2026, 3:30:00 PM</p>
-              </div>
-            </li>
-
-            <li class="notification-item warning">
-              <span class="icon icon-warning-small" aria-hidden="true"></span>
-              <div>
-                <p class="notification-text">Cisplatin stock is below minimum level.</p>
-                <p class="notification-time">7/4/2026, 2:30:00 PM</p>
-              </div>
-            </li>
+            <?php if (!$upcoming_appointments): ?>
+              <li class="appointment-item">
+                <div class="appointment-info">
+                  <p class="appointment-name">No upcoming appointments</p>
+                </div>
+              </li>
+            <?php else: ?>
+              <?php foreach (array_slice($upcoming_appointments, 0, 3) as $appointment): ?>
+                <li class="appointment-item confirmed">
+                  <div class="appointment-time">
+                    <span class="time"><?php echo htmlspecialchars(date('H:i', strtotime($appointment['appointment_time']))); ?></span>
+                    <span class="date"><?php echo htmlspecialchars(date('M j, Y', strtotime($appointment['appointment_date']))); ?></span>
+                  </div>
+                  <div class="appointment-info">
+                    <p class="appointment-name"><?php echo htmlspecialchars($appointment['reason'] ?: 'Appointment'); ?></p>
+                    <p class="appointment-desc"><?php echo htmlspecialchars('Dr. ' . $appointment['doctor_first_name'] . ' ' . $appointment['doctor_last_name']); ?></p>
+                  </div>
+                  <span class="status status-confirmed">upcoming</span>
+                </li>
+              <?php endforeach; ?>
+            <?php endif; ?>
           </ul>
         </div>
 

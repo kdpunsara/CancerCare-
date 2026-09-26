@@ -8,7 +8,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'benefactor') 
 }
 
 $benefactor_id = (int) $_SESSION['user_id'];
-$stmt_profile = $conn->prepare("SELECT u.username, u.email, u.phone,
+$stmt_profile = $conn->prepare("SELECT u.user_id, u.username, u.email, u.phone,
                                        b.first_name, b.last_name, b.benefactor_type,
                                        b.organization_name, b.address, b.country
                                 FROM User u
@@ -81,6 +81,10 @@ $error_message = $error_messages[$_GET['error'] ?? ''] ?? '';
                     <form method="POST" action="../benefactor_actions.php" class="form-grid">
                         <input type="hidden" name="action" value="update_profile">
 
+                        <div class="form-field">
+                            <label>User ID</label>
+                            <input type="text" value="<?php echo (int) $profile['user_id']; ?>" readonly>
+                        </div>
                         <div class="form-field">
                             <label>Username</label>
                             <input type="text" value="<?php echo htmlspecialchars($profile['username']); ?>" readonly>

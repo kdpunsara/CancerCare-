@@ -93,15 +93,15 @@ function getDonationBadge($status) {
             <div class="content">
 
                 <!-- Call to Action Banner -->
-                <div class="card panel" style="background: var(--navy-soft); border: none; color: var(--navy);">
+                <div class="card panel" style="background: var(--navy); border: none; color: #fff;">
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
                         <div>
-                            <h3 style="margin: 0 0 8px 0; color: var(--navy);">Patients are waiting on support you could provide</h3>
-                            <p style="margin: 0; font-size: 14px; color: var(--text-muted); max-width: 600px;">
+                            <h3 style="margin: 0 0 8px 0; color: #fff;">Patients are waiting on support you could provide</h3>
+                            <p style="margin: 0; font-size: 14px; color: #dbe4f5; max-width: 600px;">
                                 Browse verified patient needs and choose who to help next — every request is reviewed by our medical team before it's listed.
                             </p>
                         </div>
-                        <a href="patients_needing_support.php" class="btn-primary" style="background: var(--navy); color: #fff; text-decoration: none;">View Patients in Need</a>
+                        <a href="patients_needing_support.php" class="btn-primary" style="background: #fff; color: var(--navy); text-decoration: none;">View Patients in Need</a>
                     </div>
                 </div>
 

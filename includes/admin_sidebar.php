@@ -37,11 +37,11 @@ $current_page = $current_page ?? 'dashboard';
                 <span class="icon icon-profile" aria-hidden="true"></span>
                 <span class="nav-text">User Management</span>
             </a></li>
-            <li><a href="operations.php" class="nav-item <?php echo $current_page === 'operations' ? 'active' : ''; ?>">
+            <li><a href="operations.html" class="nav-item <?php echo $current_page === 'operations' ? 'active' : ''; ?>">
                 <span class="icon icon-transport" aria-hidden="true"></span>
                 <span class="nav-text">Operations</span>
             </a></li>
-            <li><a href="analytics.php" class="nav-item <?php echo $current_page === 'analytics' ? 'active' : ''; ?>">
+            <li><a href="analytics.html" class="nav-item <?php echo $current_page === 'analytics' ? 'active' : ''; ?>">
                 <span class="icon icon-records" aria-hidden="true"></span>
                 <span class="nav-text">Reports &amp; Analytics</span>
             </a></li>

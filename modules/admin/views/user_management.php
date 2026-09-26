@@ -53,7 +53,7 @@ function statusBadge($status) {
 
 // ---- Modal State & Role Selection ----
 $modal_open   = isset($_GET['add']);
-$valid_roles  = ['doctor', 'patient', 'staff', 'pharmacist', 'admin'];
+$valid_roles  = ['doctor', 'staff', 'pharmacist', 'admin'];
 $selected_role = isset($_GET['add_role']) && in_array($_GET['add_role'], $valid_roles) ? $_GET['add_role'] : 'doctor';
 $edit_user = null;
 $doctors = $conn->query("SELECT user_id, first_name, last_name, specialization FROM Doctor ORDER BY first_name, last_name")->fetch_all(MYSQLI_ASSOC);
@@ -509,7 +509,7 @@ if (isset($_GET['edit'])) {
                             </div>
                             <div class="form-field">
                                 <label>Blood Group</label>
-                                <input type="text" name="blood_group" value="<?php echo htmlspecialchars($edit_user['blood_group'] ?? ''); ?>">
+                                <input type="text" value="*****" readonly>
                             </div>
                             <div class="form-field form-field-wide">
                                 <label>Address</label>
@@ -521,7 +521,7 @@ if (isset($_GET['edit'])) {
                             </div>
                             <div class="form-field form-field-wide">
                                 <label>Allergies</label>
-                                <input type="text" name="allergies" value="<?php echo htmlspecialchars($edit_user['allergies'] ?? ''); ?>">
+                                <input type="text" value="*****" readonly>
                             </div>
                             <div class="form-field">
                                 <label>Age</label>
@@ -533,11 +533,11 @@ if (isset($_GET['edit'])) {
                             </div>
                             <div class="form-field">
                                 <label>Cancer Type</label>
-                                <input type="text" name="cancer_type" value="<?php echo htmlspecialchars($edit_user['cancer_type'] ?? ''); ?>">
+                                <input type="text" value="*****" readonly>
                             </div>
                             <div class="form-field">
                                 <label>Stage</label>
-                                <input type="text" name="stage" value="<?php echo htmlspecialchars($edit_user['stage'] ?? ''); ?>">
+                                <input type="text" value="*****" readonly>
                             </div>
                             <div class="form-field">
                                 <label>Assigned Doctor</label>
@@ -559,7 +559,7 @@ if (isset($_GET['edit'])) {
                             </div>
                             <div class="form-field form-field-wide">
                                 <label>Treatment Plan</label>
-                                <input type="text" name="treatment_plan" value="<?php echo htmlspecialchars($edit_user['treatment_plan'] ?? ''); ?>">
+                                <input type="text" value="*****" readonly>
                             </div>
                             <div class="form-field">
                                 <label>Patient Status</label>
