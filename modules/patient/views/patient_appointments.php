@@ -236,8 +236,7 @@ const appointmentSearch = document.getElementById('appointment-search');
 const appointmentSearchStatus = document.getElementById('appointment-search-status');
 const appointmentItems = Array.from(document.querySelectorAll('.appointment-item'));
 
-appointmentSearchForm.addEventListener('submit', (event) => {
-  event.preventDefault();
+function filterAppointments() {
   const query = appointmentSearch.value.trim().toLocaleLowerCase();
   let visibleCount = 0;
 
@@ -250,6 +249,17 @@ appointmentSearchForm.addEventListener('submit', (event) => {
   appointmentSearchStatus.textContent = query && visibleCount === 0
     ? 'No appointments match your search.'
     : '';
+}
+
+appointmentSearchForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  filterAppointments();
+});
+
+appointmentSearch.addEventListener('input', () => {
+  if (appointmentSearch.value.trim() === '') {
+    filterAppointments();
+  }
 });
 </script>
 
