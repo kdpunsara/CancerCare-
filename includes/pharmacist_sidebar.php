@@ -14,10 +14,8 @@ $nav_active = function (string $page) use ($current_page): string {
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
             <div class="logo">
-                <svg width="20" height="20" viewBox="0 0 24 24" style="border-radius: 6px; overflow: hidden;">
-                    <image href="../../../public/images/pharmacy-logo.jpeg" x="0" y="0" width="24" height="24" />
-                </svg>
-                <div>CancerCare<span class="logo-sub">Pharmacy Module</span></div>
+                <div class="logo-icon" aria-hidden="true">CC</div>
+                <div>Cancer Care<span class="logo-sub">Pharmacy Module</span></div>
             </div>
         </div>
         <nav class="sidebar-nav">

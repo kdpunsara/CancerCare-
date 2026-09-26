@@ -53,8 +53,10 @@ button { cursor: pointer; font-family: inherit; border: none; background: none; 
 .sidebar-header { padding: 24px 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
 .logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 700; }
 .logo-icon {
-  width: 40px; height: 40px; ;
+  width: 40px; height: 40px;
   border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, var(--teal), var(--primary));
+  color: var(--white); font-size: 0.85rem; font-weight: 700; flex-shrink: 0;
 }
 .logo-sub { display: block; font-size: 0.7rem; color: rgba(255, 255, 255, 0.55); text-transform: uppercase; margin-top: 4px; }
 

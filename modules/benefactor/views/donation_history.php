@@ -35,15 +35,38 @@ $stmt_stats->execute();
 $stats = $stmt_stats->get_result()->fetch_assoc();
 
 // ---- 3. Fetch Full Donation History ----
+$search = isset($_GET['search']) && is_string($_GET['search']) ? trim($_GET['search']) : '';
 $sql_history = "SELECT d.donation_id, d.donation_type, d.amount, d.item_name, d.quantity, d.currency,
                        d.status, d.created_at,
                        p.first_name AS p_first, p.last_name AS p_last
                 FROM Donation d
                 LEFT JOIN Patient p ON d.patient_user_id = p.user_id
-                WHERE d.benefactor_user_id = ?
-                ORDER BY d.created_at DESC";
+                WHERE d.benefactor_user_id = ?";
+if ($search !== '') {
+    $sql_history .= " AND (
+                        CONCAT_WS(' ', p.first_name, p.last_name) LIKE ?
+                        OR CAST(d.donation_id AS CHAR) LIKE ?
+                        OR CONCAT('DON-', LPAD(d.donation_id, 3, '0')) LIKE ?
+                        OR DATE_FORMAT(d.created_at, '%Y-%m-%d') LIKE ?
+                        OR DATE_FORMAT(d.created_at, '%d %b %Y') LIKE ?
+                      )";
+}
+$sql_history .= " ORDER BY d.created_at DESC";
 $stmt_history = $conn->prepare($sql_history);
-$stmt_history->bind_param("i", $benefactor_id);
+if ($search !== '') {
+    $search_pattern = '%' . $search . '%';
+    $stmt_history->bind_param(
+        "isssss",
+        $benefactor_id,
+        $search_pattern,
+        $search_pattern,
+        $search_pattern,
+        $search_pattern,
+        $search_pattern
+    );
+} else {
+    $stmt_history->bind_param("i", $benefactor_id);
+}
 $stmt_history->execute();
 $donations = $stmt_history->get_result()->fetch_all(MYSQLI_ASSOC);
 $history_message = $_GET['msg'] ?? '';
@@ -121,6 +144,20 @@ function getDonationBadge($status) {
                     <div class="list-card-header">
                         <h3>All Donations</h3>
                     </div>
+                    <form method="GET" action="" style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 0 20px 16px;">
+                        <input
+                            type="search"
+                            name="search"
+                            value="<?php echo htmlspecialchars($search, ENT_QUOTES, 'UTF-8'); ?>"
+                            placeholder="Search patient, donation ID, or date"
+                            aria-label="Search donations by patient, donation ID, or date"
+                            style="flex: 1; min-width: 220px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px;"
+                        >
+                        <button type="submit" class="btn-secondary">Search</button>
+                        <?php if ($search !== ''): ?>
+                            <a href="donation_history.php" class="btn-secondary" style="text-decoration: none;">Clear</a>
+                        <?php endif; ?>
+                    </form>
                     <div class="table-wrap">
                         <table class="data-table">
                             <thead>
@@ -138,8 +175,12 @@ function getDonationBadge($status) {
                                 <?php if (empty($donations)): ?>
                                     <tr>
                                         <td colspan="7" style="text-align: center; padding: 30px; color: var(--text-muted);">
-                                            You haven't made any donations yet. 
-                                            <a href="make_donation.php" style="color: var(--blue); font-weight: 600;">Make your first donation!</a>
+                                            <?php if ($search !== ''): ?>
+                                                No donations match "<?php echo htmlspecialchars($search, ENT_QUOTES, 'UTF-8'); ?>".
+                                            <?php else: ?>
+                                                You haven't made any donations yet.
+                                                <a href="make_donation.php" style="color: var(--blue); font-weight: 600;">Make your first donation!</a>
+                                            <?php endif; ?>
                                         </td>
                                     </tr>
                                 <?php else: ?>

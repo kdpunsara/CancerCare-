@@ -18,10 +18,10 @@ $profile_error = $_GET['error'] ?? '';
 <div class="app">
 
   <aside class="sidebar">
-    <div class="brand">
-      <div class="brand-mark">AO</div>
+   <div class="brand">
+      <div class="brand-mark">CC</div>
       <div class="brand-text">
-        <h1>Apeksha<br>OncoCare</h1>
+        <h1>Apeksha<br>CancerCare</h1>
         <p>Cancer Patient Care</p>
       </div>
     </div>
