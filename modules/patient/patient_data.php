@@ -148,3 +148,26 @@ if ($transport_search !== '') {
         departure_time, arrival_time, vehicle_type, capacity, operating_days
         FROM TransportSchedule WHERE status = 'active' ORDER BY departure_time", null);
 }
+
+if (count($transport_schedules) === 0) {
+    $demo_transport_schedules = array(
+        array('schedule_id' => 9001, 'route_name' => 'Kandy - Maharagama Express', 'departure_location' => 'Kandy', 'arrival_location' => 'Maharagama', 'departure_time' => '05:30:00', 'arrival_time' => '09:30:00', 'vehicle_type' => 'Semi-Luxury', 'capacity' => 45, 'operating_days' => 'Daily'),
+        array('schedule_id' => 9002, 'route_name' => 'Kurunegala - Maharagama Direct', 'departure_location' => 'Kurunegala', 'arrival_location' => 'Maharagama', 'departure_time' => '07:00:00', 'arrival_time' => '10:30:00', 'vehicle_type' => 'Semi-Luxury', 'capacity' => 48, 'operating_days' => 'Mon-Sat'),
+        array('schedule_id' => 9003, 'route_name' => 'Colombo - Maharagama CTB', 'departure_location' => 'Colombo', 'arrival_location' => 'Maharagama', 'departure_time' => '08:00:00', 'arrival_time' => '08:45:00', 'vehicle_type' => 'Normal (CTB)', 'capacity' => 52, 'operating_days' => 'Daily'),
+        array('schedule_id' => 9004, 'route_name' => 'Galle - Maharagama Express', 'departure_location' => 'Galle', 'arrival_location' => 'Maharagama', 'departure_time' => '06:15:00', 'arrival_time' => '09:15:00', 'vehicle_type' => 'Express', 'capacity' => 44, 'operating_days' => 'Daily'),
+        array('schedule_id' => 9005, 'route_name' => 'Matara - Maharagama Southern Express', 'departure_location' => 'Matara', 'arrival_location' => 'Maharagama', 'departure_time' => '05:45:00', 'arrival_time' => '09:00:00', 'vehicle_type' => 'Express', 'capacity' => 46, 'operating_days' => 'Daily'),
+        array('schedule_id' => 9006, 'route_name' => 'Jaffna - Colombo Night Service', 'departure_location' => 'Jaffna', 'arrival_location' => 'Colombo', 'departure_time' => '21:00:00', 'arrival_time' => '05:30:00', 'vehicle_type' => 'Luxury', 'capacity' => 40, 'operating_days' => 'Tue, Thu, Sat'),
+        array('schedule_id' => 9007, 'route_name' => 'Negombo - Maharagama Direct', 'departure_location' => 'Negombo', 'arrival_location' => 'Maharagama', 'departure_time' => '06:30:00', 'arrival_time' => '08:30:00', 'vehicle_type' => 'Semi-Luxury', 'capacity' => 45, 'operating_days' => 'Mon-Fri'),
+        array('schedule_id' => 9008, 'route_name' => 'Anuradhapura - Colombo Intercity', 'departure_location' => 'Anuradhapura', 'arrival_location' => 'Colombo', 'departure_time' => '04:45:00', 'arrival_time' => '09:15:00', 'vehicle_type' => 'Normal (CTB)', 'capacity' => 50, 'operating_days' => 'Daily'),
+        array('schedule_id' => 9009, 'route_name' => 'Ratnapura - Maharagama Hill Country', 'departure_location' => 'Ratnapura', 'arrival_location' => 'Maharagama', 'departure_time' => '07:15:00', 'arrival_time' => '09:45:00', 'vehicle_type' => 'Normal (CTB)', 'capacity' => 50, 'operating_days' => 'Mon-Sat')
+    );
+
+    if ($transport_search === '') {
+        $transport_schedules = $demo_transport_schedules;
+    } else {
+        $transport_schedules = array_values(array_filter($demo_transport_schedules, function ($schedule) use ($transport_search) {
+            $search_text = strtolower($schedule['route_name'] . ' ' . $schedule['departure_location'] . ' ' . $schedule['arrival_location']);
+            return strpos($search_text, strtolower($transport_search)) !== false;
+        }));
+    }
+}

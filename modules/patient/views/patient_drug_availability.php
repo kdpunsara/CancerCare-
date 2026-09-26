@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../patient_data.php';
+
 $search = trim(isset($_GET['q']) ? $_GET['q'] : '');
 $total_medications = 0;
 $in_stock = 0;

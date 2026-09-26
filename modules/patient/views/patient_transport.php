@@ -172,7 +172,6 @@ require_once __DIR__ . '/../patient_data.php';
         <?php if ($transport_search !== ''): ?>
           <p class="search-result-note">
             Showing buses matching <strong><?= htmlspecialchars($transport_search) ?></strong>.
-            <a href="patient_transport.php">Clear search</a>
           </p>
         <?php endif; ?>
 
@@ -220,6 +219,19 @@ require_once __DIR__ . '/../patient_data.php';
     </section>
   </main>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const searchInput = document.querySelector('input[name="q"]');
+  if (!searchInput) return;
+
+  searchInput.addEventListener('input', function () {
+    if (searchInput.value.trim() === '') {
+      window.location.href = 'patient_transport.php#bus-results';
+    }
+  });
+});
+</script>
 
 </body>
 </html>
