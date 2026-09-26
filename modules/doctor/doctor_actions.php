@@ -29,19 +29,21 @@ switch ($action) {
             $future_treatment_plan = trim($_POST['future_treatment_plan'] ?? '');
 
             // Basic validation
-            if ($record_id <= 0 || $patient_user_id <= 0 || empty($diagnosis) || empty($cancer_stage) || empty($clinical_notes)) {
+            if ($patient_user_id <= 0 || empty($diagnosis) || empty($cancer_stage) || empty($clinical_notes)) {
                 header("Location: views/view_records.php?patient=" . $patient_user_id . "&record=" . $record_id . "&error=invalid_record");
                 exit();
             }
 
-            // Security: Verify this record belongs to this doctor and patient
-            $chk = $conn->prepare("SELECT patient_user_id FROM MedicalRecord WHERE record_id = ? AND doctor_user_id = ?");
-            $chk->bind_param("ii", $record_id, $doctor_id);
-            $chk->execute();
-            $authorized_record = $chk->get_result()->fetch_assoc();
-            if (!$authorized_record || (int) $authorized_record['patient_user_id'] !== $patient_user_id) {
-                header("Location: views/view_records.php?error=unauthorized");
-                exit();
+            // Security: Verify this record belongs to this doctor and patient, if updating an existing thread
+            if ($record_id > 0) {
+                $chk = $conn->prepare("SELECT patient_user_id FROM MedicalRecord WHERE record_id = ? AND doctor_user_id = ?");
+                $chk->bind_param("ii", $record_id, $doctor_id);
+                $chk->execute();
+                $authorized_record = $chk->get_result()->fetch_assoc();
+                if (!$authorized_record || (int) $authorized_record['patient_user_id'] !== $patient_user_id) {
+                    header("Location: views/view_records.php?error=unauthorized");
+                    exit();
+                }
             }
 
             $sql = "INSERT INTO MedicalRecord

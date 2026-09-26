@@ -101,7 +101,7 @@ function getDonationBadge($status) {
                                 Browse verified patient needs and choose who to help next — every request is reviewed by our medical team before it's listed.
                             </p>
                         </div>
-                        <a href="patients_needing_support.php" class="btn-primary" style="background: #fff; color: var(--navy); text-decoration: none;">View Patients in Need</a>
+                        <a href="patients.php" class="btn-primary" style="background: #fff; color: var(--navy); text-decoration: none;">View Patients in Need</a>
                     </div>
                 </div>
 

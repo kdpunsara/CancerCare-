@@ -189,7 +189,7 @@ $current_page = 'appointments'; // Change this to 'dashboard', 'prescriptions', 
                                             <td><?php echo isset($appt['appointment_type']) ? htmlspecialchars($appt['appointment_type']) : 'Consultation'; ?></td>
                                             <td><?php echo htmlspecialchars($appt['reason']); ?></td>
                                             <td>
-                                                <a href="view_appointment.php?id=<?php echo htmlspecialchars($appt['appointment_id']); ?>" class="btn-primary" style="padding: 6px 12px; font-size: 12px;">View</a>
+                                                <a href="view_records.php?patient=<?php echo htmlspecialchars($appt['patient_user_id']); ?>" class="btn-primary" style="padding: 6px 12px; font-size: 12px;">View</a>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>

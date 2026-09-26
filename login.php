@@ -473,15 +473,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         <!-- Brand -->
         <div class="brand-mark">
-            <div class="brand-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 21s-7-4.4-9.5-9C.7 8 2 4 6 4c2 0 4 1.3 6 4 2-2.7 4-4 6-4 4 0 5.3 4 3.5 8-2.5 4.6-9.5 9-9.5 9z"/>
-                </svg>
-            </div>
-            <div class="brand-name">
-                CancerCare
-                <span>Hospital Management System</span>
-            </div>
+            
+            
         </div>
 
         <!-- Headline -->

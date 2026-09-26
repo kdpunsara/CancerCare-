@@ -51,9 +51,22 @@ if (isset($_GET['patient'])) {
                 break;
             }
         }
-        // Fallback to latest if record not found
-        if (!$record_to_update && !empty($records)) {
-            $record_to_update = $current_record;
+        // Fallback to latest if record not found, or create empty if no records exist
+        if (!$record_to_update) {
+            if (!empty($records)) {
+                $record_to_update = $current_record;
+            } else {
+                // Initialize an empty record for a new entry
+                $record_to_update = [
+                    'record_id' => 0,
+                    'record_date' => date('Y-m-d'),
+                    'diagnosis' => '',
+                    'cancer_stage' => '',
+                    'clinical_notes' => '',
+                    'treatment_plan' => '',
+                    'future_treatment_plan' => ''
+                ];
+            }
         }
     }
 }
@@ -187,9 +200,7 @@ function calculateAge($dob) {
                     </div>
                     <div class="topbar-actions">
                         <a href="view_records.php" class="btn-secondary" style="margin-right: 12px;">Back to List</a>
-                        <?php if ($current_record): ?>
-                            <a href="view_records.php?patient=<?php echo $selected_patient['user_id']; ?>&record=<?php echo $current_record['record_id']; ?>" class="btn-primary" style="margin-right: 12px;">Update Diagnosis</a>
-                        <?php endif; ?>
+                        <a href="view_records.php?patient=<?php echo $selected_patient['user_id']; ?>&record=<?php echo $current_record ? $current_record['record_id'] : 0; ?>" class="btn-primary" style="margin-right: 12px;"><?php echo $current_record ? 'Update Diagnosis' : 'Add Diagnosis'; ?></a>
                         <a href="../../../index.php?logout=1" class="signout-btn">Sign Out</a>
                     </div>
                 </header>

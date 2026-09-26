@@ -152,6 +152,19 @@ try {
 $msg    = $_GET['msg'] ?? '';
 $reason = $_GET['reason'] ?? '';
 
+
+/* =========================================================
+   PATIENTS AS JSON (for the searchable patient combobox)
+   name + user_id witharai yawanne - JS eke search karanna
+========================================================= */
+
+$patientsForJs = array_map(function ($p) {
+    return [
+        'id'   => (int)$p['user_id'],
+        'name' => trim($p['first_name'] . ' ' . $p['last_name']),
+    ];
+}, $patients);
+
 ?>
 
 <!DOCTYPE html>
@@ -361,7 +374,7 @@ $reason = $_GET['reason'] ?? '';
 
         /* =====================================================
            DELETE BUTTON
-           
+
            THIS IS LEFT AS THE EXISTING DELETE BUTTON
         ===================================================== */
 
@@ -703,6 +716,118 @@ $reason = $_GET['reason'] ?? '';
         .btn-save:hover {
 
             background: #1d4ed8;
+        }
+
+
+        /* =====================================================
+           SEARCHABLE PATIENT COMBOBOX
+           (Create Appointment modal witharayi)
+        ===================================================== */
+
+        .combobox {
+
+            position: relative;
+        }
+
+
+        .combobox-input {
+
+            width: 100%;
+
+            padding: 12px 13px;
+
+            border: 1px solid #cbd5e1;
+
+            border-radius: 8px;
+
+            font-size: 14px;
+
+            background: white;
+
+            box-sizing: border-box;
+        }
+
+
+        .combobox-input:focus {
+
+            outline: none;
+
+            border-color: #2563eb;
+
+            box-shadow:
+                0 0 0 3px
+                rgba(37,99,235,0.12);
+        }
+
+
+        .combobox-list {
+
+            display: none;
+
+            position: absolute;
+
+            top: calc(100% + 6px);
+
+            left: 0;
+            right: 0;
+
+            z-index: 20;
+
+            max-height: 220px;
+
+            overflow-y: auto;
+
+            background: white;
+
+            border: 1px solid #cbd5e1;
+
+            border-radius: 8px;
+
+            box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+
+            list-style: none;
+
+            margin: 0;
+            padding: 6px;
+        }
+
+
+        .combobox-list.show {
+
+            display: block;
+        }
+
+
+        .combobox-option {
+
+            padding: 9px 10px;
+
+            border-radius: 6px;
+
+            cursor: pointer;
+
+            font-size: 14px;
+
+            color: #1e293b;
+        }
+
+
+        .combobox-option:hover,
+        .combobox-option.active {
+
+            background: #eff6ff;
+
+            color: #1d4ed8;
+        }
+
+
+        .combobox-empty {
+
+            padding: 9px 10px;
+
+            font-size: 13px;
+
+            color: #94a3b8;
         }
 
 
@@ -1248,52 +1373,42 @@ $reason = $_GET['reason'] ?? '';
             >
 
 
-            <!-- PATIENT -->
+            <!-- PATIENT (SEARCHABLE COMBOBOX)
+                 name="patient_id" tiyenne me hidden input ekaye witharai,
+                 eyinma medical_actions.php eke ehema wenasak karanna oni na
+            -->
 
             <div class="form-group">
 
-                <label>
+                <label for="patientSearchInput">
                     Patient
                 </label>
 
 
-                <select
-                    name="patient_id"
-                    class="form-control"
-                    required
-                >
+                <div class="combobox" id="patientCombobox">
 
-                    <option value="">
-                        Select Patient
-                    </option>
+                    <input
+                        type="hidden"
+                        name="patient_id"
+                        id="patient_id"
+                        value=""
+                        required
+                    >
 
+                    <input
+                        type="text"
+                        class="combobox-input"
+                        id="patientSearchInput"
+                        placeholder="Search patient by name..."
+                        autocomplete="off"
+                    >
 
-                    <?php foreach ($patients as $patient): ?>
+                    <ul
+                        class="combobox-list"
+                        id="patientOptionsList"
+                    ></ul>
 
-                        <option
-                            value="<?php
-                                echo e(
-                                    $patient['user_id']
-                                );
-                            ?>"
-                        >
-
-                            <?php
-
-                            echo e(
-                                $patient['first_name']
-                                . ' '
-                                . $patient['last_name']
-                            );
-
-                            ?>
-
-                        </option>
-
-                    <?php endforeach; ?>
-
-
-                </select>
+                </div>
 
             </div>
 
@@ -1818,6 +1933,13 @@ $reason = $_GET['reason'] ?? '';
 
 <script>
 
+/* =========================================================
+   PATIENTS DATA FOR THE SEARCHABLE COMBOBOX
+   (PHP eken JSON widiyata dala JS ekata dennawa)
+========================================================= */
+
+const PATIENTS_DATA = <?php echo json_encode($patientsForJs, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>;
+
 
 /* =========================================================
    SIDEBAR
@@ -1906,6 +2028,180 @@ if (statusFilter) {
 
 
 /* =========================================================
+   PATIENT SEARCHABLE COMBOBOX (Create Appointment modal)
+========================================================= */
+
+const patientHiddenInput   = document.getElementById('patient_id');
+const patientSearchInput   = document.getElementById('patientSearchInput');
+const patientOptionsList   = document.getElementById('patientOptionsList');
+const patientCombobox      = document.getElementById('patientCombobox');
+
+let patientActiveIndex = -1;
+let patientVisibleList = [];
+
+function renderPatientOptions(items)
+{
+    patientOptionsList.innerHTML = '';
+    patientActiveIndex = -1;
+    patientVisibleList = items;
+
+    if (items.length === 0) {
+
+        const empty = document.createElement('li');
+        empty.className = 'combobox-empty';
+        empty.textContent = 'No matching patients';
+        patientOptionsList.appendChild(empty);
+        return;
+    }
+
+    items.forEach(function (patient, index) {
+
+        const li = document.createElement('li');
+        li.className = 'combobox-option';
+        li.textContent = patient.name;
+        li.dataset.index = index;
+
+        li.addEventListener('click', function () {
+            selectPatient(patient);
+        });
+
+        patientOptionsList.appendChild(li);
+
+    });
+}
+
+function selectPatient(patient)
+{
+    patientHiddenInput.value = patient.id;
+    patientSearchInput.value = patient.name;
+    closePatientList();
+}
+
+function openPatientList()
+{
+    patientOptionsList.classList.add('show');
+}
+
+function closePatientList()
+{
+    patientOptionsList.classList.remove('show');
+    patientActiveIndex = -1;
+}
+
+function filterPatients(query)
+{
+    const q = query.trim().toLowerCase();
+
+    if (q === '') {
+        return PATIENTS_DATA;
+    }
+
+    return PATIENTS_DATA.filter(function (patient) {
+        return patient.name.toLowerCase().includes(q);
+    });
+}
+
+function highlightActiveOption()
+{
+    const options = patientOptionsList.querySelectorAll('.combobox-option');
+
+    options.forEach(function (opt, idx) {
+        opt.classList.toggle('active', idx === patientActiveIndex);
+    });
+
+    if (patientActiveIndex >= 0 && options[patientActiveIndex]) {
+        options[patientActiveIndex].scrollIntoView({ block: 'nearest' });
+    }
+}
+
+if (patientSearchInput) {
+
+    // Type karana welawata patient value eka clear karala, filter karanawa
+    patientSearchInput.addEventListener('input', function () {
+
+        patientHiddenInput.value = '';
+
+        const filtered = filterPatients(this.value);
+        renderPatientOptions(filtered);
+        openPatientList();
+
+    });
+
+    // Click karama full list eka penenna
+    patientSearchInput.addEventListener('focus', function () {
+
+        const filtered = filterPatients(this.value);
+        renderPatientOptions(filtered);
+        openPatientList();
+
+    });
+
+    // Keyboard walin navigate karanna (up/down/enter/escape)
+    patientSearchInput.addEventListener('keydown', function (e) {
+
+        const isOpen = patientOptionsList.classList.contains('show');
+
+        if (!isOpen) {
+            return;
+        }
+
+        if (e.key === 'ArrowDown') {
+
+            e.preventDefault();
+            patientActiveIndex = Math.min(
+                patientActiveIndex + 1,
+                patientVisibleList.length - 1
+            );
+            highlightActiveOption();
+
+        } else if (e.key === 'ArrowUp') {
+
+            e.preventDefault();
+            patientActiveIndex = Math.max(patientActiveIndex - 1, 0);
+            highlightActiveOption();
+
+        } else if (e.key === 'Enter') {
+
+            e.preventDefault();
+
+            if (
+                patientActiveIndex >= 0 &&
+                patientVisibleList[patientActiveIndex]
+            ) {
+                selectPatient(patientVisibleList[patientActiveIndex]);
+            }
+
+        } else if (e.key === 'Escape') {
+
+            closePatientList();
+
+        }
+
+    });
+
+}
+
+// Combobox ekata pitin click karama list eka close karanna
+document.addEventListener('click', function (event) {
+
+    if (
+        patientCombobox &&
+        !patientCombobox.contains(event.target)
+    ) {
+        closePatientList();
+    }
+
+});
+
+function resetPatientCombobox()
+{
+    if (patientHiddenInput) patientHiddenInput.value = '';
+    if (patientSearchInput) patientSearchInput.value = '';
+    closePatientList();
+}
+
+
+/* =========================================================
    CREATE MODAL
 ========================================================= */
 
@@ -1938,6 +2234,8 @@ if (openCreateModal) {
     openCreateModal.addEventListener(
         'click',
         function () {
+
+            resetPatientCombobox();
 
             createModal.classList.add('show');
 
