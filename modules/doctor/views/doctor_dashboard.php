@@ -5,10 +5,10 @@
 session_start();
 require_once __DIR__ . '/../../../config/database.php';
 
-//if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'doctor') {
-//    header("Location: ../../../index.php");
-//    exit();
-//}
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'doctor') {
+    header("Location: ../../../index.php");
+    exit();
+}
 
 $doctor_id = $_SESSION['user_id'];
 
@@ -80,7 +80,7 @@ $current_page = 'dashboard'; // Change this to 'dashboard', 'prescriptions', etc
                     </div>
                 </div>
                 <div class="topbar-actions">
-                    <button class="signout-btn">Sign Out</button>
+                    <a href="../../../logout.php" class="signout-btn">Sign Out</a>
                 </div>
             </header>
 

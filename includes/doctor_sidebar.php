@@ -59,6 +59,10 @@ $current_page = $current_page ?? 'dashboard';
                 <span class="icon icon-wellness" aria-hidden="true"></span>
                 <span class="nav-text">Meal Plans</span>
             </a></li>
+            <li><a href="doctor_motivation.html" class="nav-item <?php echo $current_page === 'motivation' ? 'active' : ''; ?>">
+                <span class="icon icon-motivation" aria-hidden="true"></span>
+                <span class="nav-text">Motivation &amp; Support</span>
+            </a></li>
         </ul>
 
         <p class="nav-label" style="margin-top: 16px;">Account</p>
