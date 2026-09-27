@@ -1,0 +1,145 @@
+/* ============================================
+   Apeksha OncoCare — Auth pages stylesheet
+   Used only by: login.html, register.html, logout.html
+   Link AFTER base.css.
+   ============================================ */
+
+/* ============ AUTH PAGES (login / register / logout) ============ */
+
+.auth-page-wrap{
+  display: flex;
+  justify-content: center;
+  padding: 20px 0 10px;
+}
+
+.auth-body{
+  background: linear-gradient(135deg, var(--navy) 0%, var(--navy-soft) 55%, #1c2b52 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.auth-wrap{
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 26px;
+}
+
+.auth-wrap-wide{
+  max-width: 620px;
+}
+
+.auth-brand{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.auth-brand .brand-mark{
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+}
+
+.brand-text-dark h1{
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.brand-text-dark p{
+  margin: 3px 0 0;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.5);
+}
+
+.auth-card{
+  width: 100%;
+  max-width: 460px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 34px 36px 30px;
+}
+
+.auth-card-wide{
+  max-width: 640px;
+  padding: 34px 40px 32px;
+}
+
+.auth-card-center{
+  text-align: center;
+}
+
+.auth-title{
+  margin: 0;
+  font-size: 21px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.auth-subtitle{
+  margin: 8px 0 26px;
+  font-size: 13.5px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.auth-card .app-form .form-field{
+  margin-bottom: 16px;
+}
+
+.form-row-between{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: -4px 0 20px;
+}
+
+.checkbox-label{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.checkbox-terms{
+  margin: 4px 0 22px;
+  line-height: 1.4;
+}
+
+.auth-link{
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--blue);
+}
+
+.auth-link:hover{ text-decoration: underline; }
+
+.auth-footer{
+  margin: 22px 0 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.logout-icon{
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #e2f7f3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+}

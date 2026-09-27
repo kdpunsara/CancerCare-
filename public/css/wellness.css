@@ -1,0 +1,106 @@
+/* ============================================
+   Apeksha OncoCare — Wellness & Meals page stylesheet
+   Used only by: wellness.html
+   Link AFTER base.css.
+   ============================================ */
+
+/* ============ MEAL PLAN ============ */
+
+.meal-grid{
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+
+.meal-day-card{
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.meal-empty{
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 190px;
+  padding: 28px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.meal-empty .icon-wellness{
+  width: 30px;
+  height: 30px;
+  margin-bottom: 12px;
+  background-color: var(--teal);
+  border-radius: 50%;
+  background-size: 18px;
+}
+
+.meal-empty h4{
+  margin: 0 0 6px;
+  color: var(--text);
+  font-size: 15px;
+}
+
+.meal-empty p{
+  margin: 0;
+  font-size: 13px;
+}
+
+.meal-day-name{
+  margin: 0 0 4px;
+  font-size: 14.5px;
+  font-weight: 700;
+}
+
+.meal-row{
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.meal-tag{
+  align-self: flex-start;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+
+.meal-tag-breakfast{ background: #fdf1de; color: #b4650a; }
+.meal-tag-lunch{ background: #e8edfe; color: var(--blue-dark); }
+.meal-tag-dinner{ background: #efe6fb; color: #7c3aed; }
+.meal-tag-snack{ background: #e2f7f3; color: #0d9488; }
+
+.meal-text{
+  font-size: 12.5px;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.tips-list{
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tips-list li{
+  font-size: 13.5px;
+  color: var(--text);
+  line-height: 1.5;
+}

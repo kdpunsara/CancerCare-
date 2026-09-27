@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transport & Support - Cancer Care</title>
+    <link rel="stylesheet" href="public/css/base.css">
+    <style>
+        
+        .service-hero { background: var(--bg); padding: 60px 20px; text-align: center; border-bottom: 1px solid var(--border); }
+        .main-hero-image { max-width: 100%; height: auto; border-radius: var(--radius-lg); box-shadow: var(--shadow); margin-bottom: 30px; min-height: 350px; object-fit: cover; background-color: #fdf6dc; }
+        .service-content { max-width: 900px; margin: 40px auto; padding: 0 20px; }
+        .service-content h2 { color: var(--navy); margin-top: 30px; font-size: 22px; }
+        .service-content p { line-height: 1.7; color: var(--text); font-size: 15px; }
+        .feature-list { list-style: none; padding: 0; margin-top: 20px; }
+        .feature-list li { padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 15px; }
+        .feature-list li::before { content: "✓"; color: var(--teal); font-weight: bold; margin-right: 12px; font-size: 18px; }
+        .navbar { background: #fff; box-shadow: 0 4px 6px -1px rgba(0,0,0,.1); position: sticky; top: 0; z-index: 1000; padding: 1rem 0; }
+        .nav-container { width: 90%; max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .nav-logo-container { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+        .nav-logo { height: 45px; width: auto; object-fit: contain; }
+        .nav-brand { font-size: 1.25rem; font-weight: 700; color: #003366; line-height: 1.2; }
+        .nav-brand span { display: block; font-size: .75rem; font-weight: 500; color: #4a5568; text-transform: uppercase; letter-spacing: .5px; }
+        .nav-links { display: flex; gap: 2rem; align-items: center; list-style: none; margin: 0; padding: 0; }
+        .nav-links a { color: #4a5568; font-weight: 500; font-size: .95rem; text-decoration: none; }
+        .nav-links a:hover { color: #003366; }
+        .nav-auth { display: flex; gap: 1rem; }
+        .nav-auth a { margin: 0; }
+        .nav-login { border: 2px solid #003366; color: #003366; padding: .6rem 1.5rem; border-radius: 6px; font-weight: 600; text-decoration: none; }
+        .footer { background: #003366; color: #fff; padding: 3rem 0 1rem; margin-top: 60px; }
+        .footer .container { width: 90%; max-width: 1200px; margin: 0 auto; }
+        .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 3rem; }
+        .footer h3, .footer h4 { margin: 0 0 1rem; }
+        .footer p, .footer li, .footer a { color: rgba(255,255,255,.8); font-size: .9rem; line-height: 1.7; }
+        .footer ul { list-style: none; padding: 0; margin: 0; }
+        .footer a { text-decoration: none; }
+        .footer-bottom { border-top: 1px solid rgba(255,255,255,.2); margin-top: 2rem; padding-top: 1rem; text-align: center; }
+        @media (max-width: 768px) { .nav-links { gap: 1rem; } .nav-auth { display: none; } .footer-grid { grid-template-columns: 1fr; gap: 1.5rem; } }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="home.html" class="nav-logo-container">
+                <img src="public/images/logo.png" alt="Apeksha Hospital Logo" class="nav-logo">
+                <div class="nav-brand">Cancer Care<span>Apeksha Hospital</span></div>
+            </a>
+            <ul class="nav-links">
+                <li><a href="home.html">Home</a></li>
+                
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+            <div class="nav-auth"><a href="login.php" class="nav-login">Login</a></div>
+        </div>
+    </nav>
+
+    <div class="service-hero">
+        <div style="max-width: 1000px; margin: 0 auto;">
+            <!-- REPLACE THE SRC BELOW WITH YOUR ACTUAL IMAGE PATH -->
+            <img src="public/images/bus.jpg" alt="Transport and Patient Support" class="main-hero-image">
+            <h1 style="color: var(--navy); margin-bottom: 10px;">Transport & Support</h1>
+            <p style="color: var(--text-muted); font-size: 18px; max-width: 700px; margin: 0 auto;">Coordinated hospital transport schedules and personalized nutritional meal planning based on specific medical conditions.</p>
+        </div>
+    </div>
+
+    <div class="service-content">
+        <h2>Overview</h2>
+        <p>Cancer treatment is a marathon, not a sprint. Our Transport & Support module addresses the logistical and nutritional challenges patients face, ensuring they can physically get to the hospital and are properly nourished during their treatment cycles.</p>
+
+        <h2>Key Features</h2>
+        <ul class="feature-list">
+            <li><strong>Hospital Transport Scheduling:</strong> View  scheduled hospital transport services for patients traveling from rural or distant areas.</li>
+            <li><strong>Personalized Meal Plans:</strong> Dieticians and doctors can assign customized nutritional meal plans based on the patient's specific cancer type and treatment side effects.</li>
+            <li><strong>Donor Integration:</strong> Connects underprivileged patients with benefactors who can fund for their medications and equipment needs.</li>
+            <li><strong>Welfare Tracking:</strong> Admins can monitor which patients require financial aid for transport and allocate resources accordingly.</li>
+        </ul>
+
+        <h2>Benefits for Patients</h2>
+        <p>By removing the logistical burden of travel and ensuring proper nutrition, patients can focus entirely on their recovery. This holistic approach to care significantly improves the overall quality of life during treatment.</p>
+        
+        <div style="text-align: center; margin-top: 40px;">
+            <a href="login.php" class="btn-primary" style="padding: 14px 28px; border-radius: var(--radius-sm); text-decoration: none; color: #fff;">Login to access</a>
+        </div>
+    </div>
+
+    <footer class="footer" id="contact">
+        <div class="container">
+            <div class="footer-grid">
+                <div><h3>Cancer Patient Care System</h3><p>A digital initiative to streamline hospital operations and improve the quality of care for cancer patients at Apeksha Hospital, Sri Lanka.</p></div>
+                <div><h4>Quick Links</h4><ul><li><a href="home.html">Home</a></li><li><a href="home.html#services">Services</a></li><li><a href="home.html#donate">Donate</a></li><li><a href="login.php">Login</a></li></ul></div>
+                <div><h4>Contact Us</h4><ul><li>National Cancer Institute</li><li>Maharagama, Sri Lanka</li><li>support@cancercare.lk</li><li>(+94) 112589123</li></ul></div>
+            </div>
+            <div class="footer-bottom"><p>&copy; 2026 Cancer Patient Care System | Apeksha Hospital. All Rights Reserved.</p></div>
+        </div>
+    </footer>
+
+</body>
+</html>
