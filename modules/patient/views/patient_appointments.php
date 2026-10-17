@@ -71,9 +71,9 @@ $reminders = $stmt->get_result();
 </ul>
 </nav>
 <div class="sidebar-user">
-<div class="avatar">SJ</div>
+<div class="avatar"><?= htmlspecialchars($patient_initials) ?></div>
 <div>
-<p class="user-name">Sandun Jayasekara</p>
+<p class="user-name"><?= htmlspecialchars($full_name) ?></p>
 <p class="user-role">Patient</p>
 </div>
 </div>
@@ -134,15 +134,19 @@ onclick="return confirm('Delete this reminder?');">Delete</button>
         <div class="list-card-header">
             <h3>Search Appointments</h3>
         </div>
-        <form id="appointment-search-form" class="reminder-form" onsubmit="return false;" style="display: flex; gap: 15px; align-items: center;">
-            <input id="search-doctor" name="doctor" class="reminder-input" type="text" placeholder="Search by Doctor Name" style="flex: 2;">
-            <input id="search-date" name="date" class="reminder-input" type="date" style="flex: 1;">
-            <button type="button" class="request-btn reminder-add-btn" style="padding: 10px 20px;">Search</button>
+        <form id="appointment-search-form" class="reminder-form" onsubmit="return false;" style="display: flex; flex-wrap: wrap; gap: 15px; align-items: center;">
+            <input id="search-query" name="search" class="reminder-input" type="text" placeholder="Search by name or reason" style="flex: 2 1 220px; min-width: 0;">
+            <input id="search-date" name="date" class="reminder-input" type="date" style="flex: 1 1 170px; min-width: 0;">
+            <button type="button" id="appointment-search-btn" class="request-btn reminder-add-btn" style="padding: 10px 20px;">Search</button>
 <button type="button" id="search-clear-btn" class="request-btn reminder-add-btn" style="background-color: #6c757d; text-decoration: none; display: none; align-items: center; padding: 10px 20px;">Clear</button>
         </form>
     </div>
     <!-- END SEARCH FORM -->
-<div class="card list-card wide-card">
+    <div class="card list-card wide-card" id="search-results-card" style="display: none;">
+        <div class="list-card-header"><h3>Search Results</h3></div>
+        <ul class="appointment-list" id="search-results-list"></ul>
+    </div>
+<div class="card list-card wide-card" id="upcoming-card">
 <div class="list-card-header">
 <h3>Upcoming Appointments</h3>
 <div class="filter-pills">
@@ -154,7 +158,7 @@ onclick="return confirm('Delete this reminder?');">Delete</button>
 <ul class="appointment-list" id="upcoming-list">
 <?php $has_upcoming = false; foreach ($appointments as $appointment): ?>
 <?php if ($appointment['appointment_status'] !== 'upcoming') { continue; } $has_upcoming = true; ?>
-<li class="appointment-item confirmed" data-doctor="<?= htmlspecialchars(strtolower('dr. ' . $appointment['doctor_first_name'] . ' ' . $appointment['doctor_last_name'])) ?>" data-date="<?= htmlspecialchars($appointment['appointment_date']) ?>">
+<li class="appointment-item confirmed" data-search="<?= htmlspecialchars(strtolower('dr. ' . $appointment['doctor_first_name'] . ' ' . $appointment['doctor_last_name'] . ' ' . ($appointment['reason'] ?: 'Appointment'))) ?>" data-date="<?= htmlspecialchars($appointment['appointment_date']) ?>">
 <div class="appointment-time"><span class="time"><?= htmlspecialchars(date('g:i A', strtotime($appointment['appointment_time']))) ?></span><span class="date"><?= htmlspecialchars(date('M j, Y', strtotime($appointment['appointment_date']))) ?></span></div>
 <div class="appointment-info">
 <p class="appointment-name"><?= htmlspecialchars($appointment['reason'] ?: 'Appointment') ?></p>
@@ -166,14 +170,14 @@ onclick="return confirm('Delete this reminder?');">Delete</button>
 <li class="appointment-item empty-state" id="empty-upcoming" style="justify-content: center; color: #64748b; <?= $has_upcoming ? 'display: none;' : '' ?>">No upcoming appointments found.</li>
 </ul>
 </div>
-<div class="card list-card wide-card">
+<div class="card list-card wide-card" id="past-card">
 <div class="list-card-header">
 <h3>Past Appointments</h3>
 </div>
 <ul class="appointment-list" id="past-list">
 <?php $has_past = false; foreach ($appointments as $appointment): ?>
 <?php if ($appointment['appointment_status'] !== 'completed') { continue; } $has_past = true; ?>
-<li class="appointment-item completed" data-doctor="<?= htmlspecialchars(strtolower('dr. ' . $appointment['doctor_first_name'] . ' ' . $appointment['doctor_last_name'])) ?>" data-date="<?= htmlspecialchars($appointment['appointment_date']) ?>">
+<li class="appointment-item completed" data-search="<?= htmlspecialchars(strtolower('dr. ' . $appointment['doctor_first_name'] . ' ' . $appointment['doctor_last_name'] . ' ' . ($appointment['reason'] ?: 'Appointment'))) ?>" data-date="<?= htmlspecialchars($appointment['appointment_date']) ?>">
 <div class="appointment-time"><span class="time"><?= htmlspecialchars(date('g:i A', strtotime($appointment['appointment_time']))) ?></span><span class="date"><?= htmlspecialchars(date('M j, Y', strtotime($appointment['appointment_date']))) ?></span></div>
 <div class="appointment-info">
 <p class="appointment-name"><?= htmlspecialchars($appointment['reason'] ?: 'Appointment') ?></p>
@@ -190,34 +194,42 @@ onclick="return confirm('Delete this reminder?');">Delete</button>
 </div>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const doctorInput = document.getElementById('search-doctor');
+    const searchInput = document.getElementById('search-query');
     const dateInput = document.getElementById('search-date');
+    const searchButton = document.getElementById('appointment-search-btn');
     const clearBtn = document.getElementById('search-clear-btn');
     const allAppointments = document.querySelectorAll('.appointment-item:not(.empty-state)');
+    const searchResultsCard = document.getElementById('search-results-card');
+    const searchResultsList = document.getElementById('search-results-list');
+    const upcomingCard = document.getElementById('upcoming-card');
+    const pastCard = document.getElementById('past-card');
     
     function filterAppointments() {
-        if (!doctorInput) return;
-        const docVal = doctorInput.value.toLowerCase().trim();
+        if (!searchInput) return;
+        const query = searchInput.value.toLowerCase().trim();
         const dateVal = dateInput.value;
+        const searchActive = query !== '' || dateVal !== '';
+        const matches = [];
         
         let hasUpcoming = false;
         let hasPast = false;
         
-        if (docVal || dateVal) {
+        if (query || dateVal) {
             clearBtn.style.display = 'inline-flex';
         } else {
             clearBtn.style.display = 'none';
         }
 
         allAppointments.forEach(item => {
-            const itemDoctor = item.getAttribute('data-doctor') || '';
+            const searchableText = item.getAttribute('data-search') || '';
             const itemDate = item.getAttribute('data-date') || '';
             
-            const matchDoctor = docVal === '' || itemDoctor.includes(docVal);
+            const matchText = query === '' || searchableText.includes(query);
             const matchDate = dateVal === '' || itemDate === dateVal;
             
-            if (matchDoctor && matchDate) {
-                item.style.display = 'flex'; // or default display
+            if (matchText && matchDate) {
+                item.style.display = 'flex';
+                matches.push(item.cloneNode(true));
                 if (item.classList.contains('confirmed')) hasUpcoming = true;
                 if (item.classList.contains('completed')) hasPast = true;
             } else {
@@ -229,14 +241,32 @@ document.addEventListener('DOMContentLoaded', function() {
         const ep = document.getElementById('empty-past');
         if (eu) eu.style.display = hasUpcoming ? 'none' : 'flex';
         if (ep) ep.style.display = hasPast ? 'none' : 'flex';
+
+        if (searchActive) {
+            searchResultsList.replaceChildren(...matches);
+            if (matches.length === 0) {
+                const emptyResult = document.createElement('li');
+                emptyResult.className = 'appointment-item empty-state';
+                emptyResult.textContent = 'No appointments match your search.';
+                searchResultsList.appendChild(emptyResult);
+            }
+            searchResultsCard.style.display = '';
+            upcomingCard.style.display = 'none';
+            pastCard.style.display = 'none';
+        } else {
+            searchResultsCard.style.display = 'none';
+            upcomingCard.style.display = '';
+            pastCard.style.display = '';
+        }
     }
 
-    if (doctorInput) doctorInput.addEventListener('input', filterAppointments);
+    if (searchInput) searchInput.addEventListener('input', filterAppointments);
     if (dateInput) dateInput.addEventListener('change', filterAppointments);
+    if (searchButton) searchButton.addEventListener('click', filterAppointments);
     
     if (clearBtn) {
         clearBtn.addEventListener('click', function() {
-            doctorInput.value = '';
+            searchInput.value = '';
             dateInput.value = '';
             filterAppointments();
         });
@@ -245,5 +275,6 @@ document.addEventListener('DOMContentLoaded', function() {
     filterAppointments();
 });
 </script>
+<script src="../../../public/js/move-user-to-topbar.js" defer></script>
 </body>
 </html>

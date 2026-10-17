@@ -29,11 +29,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             switch ($role) {
                 case 'patient': $destination = 'modules/patient/views/patient_dashboard.php'; break;
                 case 'doctor': $destination = 'modules/doctor/views/doctor_dashboard.php'; break;
-                case 'staff': $destination = 'modules/staff/views/dashboard.php'; break;
+                case 'staff': $destination = 'modules/staff/views/staff_dashboard.php'; break;
                 case 'pharmacist': $destination = 'modules/pharmacist/views/dashboard.php'; break;
                 case 'benefactor': $destination = 'modules/benefactor/views/dashboard.php'; break;
                 case 'admin': $destination = 'modules/admin/views/admin_dashboard.php'; break;
-                default: $destination = 'index.php'; break;
+                default: $destination = 'home.html'; break;
             }
 
             header('Location: ' . $destination);

@@ -4,7 +4,7 @@ require_once __DIR__ .  '/../../../config/database.php';
 
 // Security Check
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'benefactor') {
-    header("Location: ../../../index.php");
+    header("Location: ../../../login.php");
     exit();
 }
 
@@ -68,6 +68,19 @@ $preselected_need_id = isset($_GET['need']) ? intval($_GET['need']) : 0;
                         <p class="panel-note" style="color: var(--red);"><?php echo htmlspecialchars($_SESSION['donation_error']); unset($_SESSION['donation_error']); ?></p>
                     </div>
                 <?php endif; ?>
+
+                <div class="card panel" style="max-width: 800px; margin: 0 auto 24px; background: #f8f9fa; border-left: 4px solid var(--teal);">
+                    <h4 style="margin-bottom: 12px; color: var(--teal); font-size: 16px;">Bank Account Details for Transfers</h4>
+                    <p style="font-size: 14px; line-height: 1.6; color: var(--text);">
+                        <strong>Account Name:</strong> National Cancer Institute Apeksha Development Committee<br>
+                        <strong>Account Number:</strong> 000160005440<br>
+                        <strong>Bank:</strong> Sampath Bank PLC<br>
+                        <strong>Branch:</strong> City Branch<br>
+                        <strong>Bank Code:</strong> 7278<br>
+                        <strong>Branch Code:</strong> 001<br>
+                        <strong>SWIFT Code:</strong> BSAMLKLX
+                    </p>
+                </div>
 
                 <div class="card form-card" style="max-width: 800px; margin: 0 auto;">
                     <h3 class="form-title">Donation Form</h3>

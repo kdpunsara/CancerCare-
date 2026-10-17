@@ -46,3 +46,4 @@ $role_display = $role_display
         </div>
     </div>
 </aside>
+<script src="../../../public/js/move-user-to-topbar.js" defer></script>

@@ -51,7 +51,6 @@ switch ($action) {
 
     case 'add_drug':
         $errors = [];
-        $selected_medicine_id = (int) ($_POST['medicine_id'] ?? 0);
         $fields = [
             'medicine_name' => trim($_POST['medicine_name'] ?? ''),
             'generic_name' => trim($_POST['generic_name'] ?? ''),
@@ -100,45 +99,20 @@ switch ($action) {
             $qty = (int) $fields['initial_stock'];
             $conn->begin_transaction();
 
-            if ($selected_medicine_id > 0) {
-                $stmt = $conn->prepare(
-                    "SELECT medicine_id, medicine_name, generic_name, category, manufacturer
-                     FROM Medicine WHERE medicine_id = ? LIMIT 1 FOR UPDATE"
-                );
-                $stmt->bind_param("i", $selected_medicine_id);
-            } else {
-                $stmt = $conn->prepare(
-                    "SELECT medicine_id, medicine_name, generic_name, category, manufacturer FROM Medicine
-                     WHERE LOWER(medicine_name) = LOWER(?) AND LOWER(COALESCE(generic_name, '')) = LOWER(?)
-                     LIMIT 1"
-                );
-                $stmt->bind_param("ss", $fields['medicine_name'], $fields['generic_name']);
-            }
+            $stmt = $conn->prepare(
+                "SELECT medicine_id FROM Medicine
+                 WHERE LOWER(medicine_name) = LOWER(?)
+                   AND LOWER(COALESCE(generic_name, '')) = LOWER(?)
+                   AND LOWER(COALESCE(manufacturer, '')) = LOWER(?)
+                 LIMIT 1"
+            );
+            $stmt->bind_param("sss", $fields['medicine_name'], $fields['generic_name'], $fields['manufacturer']);
             $stmt->execute();
             $existing = $stmt->get_result()->fetch_assoc();
             $stmt->close();
 
             if ($existing) {
                 $medicine_id = (int) $existing['medicine_id'];
-
-                if ($selected_medicine_id > 0) {
-                    $fields['medicine_name'] = $existing['medicine_name'];
-                    $fields['generic_name'] = $existing['generic_name'] ?? '';
-                    $fields['category'] = $existing['category'];
-                    $fields['manufacturer'] = $existing['manufacturer'] ?? '';
-                }
-
-                $stmt = $conn->prepare("SELECT 1 FROM PharmacyInventory WHERE pharmacist_user_id = ? AND medicine_id = ? LIMIT 1");
-                $stmt->bind_param("ii", $pharmacist_id, $medicine_id);
-                $stmt->execute();
-                $already = $stmt->get_result()->num_rows > 0;
-                $stmt->close();
-
-                if ($already) {
-                    $conn->rollback();
-                    flash_set('error', 'This medicine is already in your inventory. Edit the existing medicine from the dashboard.');
-                    pharmacist_redirect('views/add-drug.php');
-                }
             } else {
                 $generic = $fields['generic_name'] !== '' ? $fields['generic_name'] : null;
                 $maker = $fields['manufacturer'] !== '' ? $fields['manufacturer'] : null;

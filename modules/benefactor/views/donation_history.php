@@ -4,7 +4,7 @@ require_once __DIR__ . '/../../../config/database.php';
 
 // Security Check
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'benefactor') {
-    header("Location: ../../../index.php");
+    header("Location: ../../../login.php");
     exit();
 }
 

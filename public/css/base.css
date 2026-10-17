@@ -974,3 +974,18 @@ button{ font-family: inherit; cursor: pointer; }
   .stat-value{ font-size: 22px; }
   .welcome-card h3{ font-size: 16px; }
 }
+
+.topbar-user.sidebar-user{
+  padding: 0;
+  margin: 0;
+  border: 0;
+  gap: 10px;
+}
+
+.topbar-user .user-name{ color: var(--text); }
+.topbar-user .user-role{ color: var(--text-muted); }
+
+@media (max-width: 840px){
+  .topbar-user .user-name,
+  .topbar-user .user-role{ display: block; }
+}

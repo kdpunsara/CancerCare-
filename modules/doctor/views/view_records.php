@@ -3,7 +3,7 @@ session_start();
 require_once __DIR__ . '/../../../config/database.php';
 
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'doctor') {
-    header("Location: ../../../index.php");
+    header("Location: ../../../login.php");
     exit();
 }
 
@@ -127,7 +127,7 @@ function calculateAge($dob) {
                         </div>
                     </div>
                     <div class="topbar-actions">
-                        <a href="../../../index.php?logout=1" class="signout-btn">Sign Out</a>
+                        <a href="../../../logout.php" class="signout-btn">Sign Out</a>
                     </div>
                 </header>
 
@@ -201,7 +201,7 @@ function calculateAge($dob) {
                     <div class="topbar-actions">
                         <a href="view_records.php" class="btn-secondary" style="margin-right: 12px;">Back to List</a>
                         <a href="view_records.php?patient=<?php echo $selected_patient['user_id']; ?>&record=<?php echo $current_record ? $current_record['record_id'] : 0; ?>" class="btn-primary" style="margin-right: 12px;"><?php echo $current_record ? 'Update Diagnosis' : 'Add Diagnosis'; ?></a>
-                        <a href="../../../index.php?logout=1" class="signout-btn">Sign Out</a>
+                        <a href="../../../logout.php" class="signout-btn">Sign Out</a>
                     </div>
                 </header>
 
@@ -300,7 +300,7 @@ function calculateAge($dob) {
                     </div>
                     <div class="topbar-actions">
                         <a href="view_records.php?patient=<?php echo $selected_patient['user_id']; ?>" class="btn-secondary" style="margin-right: 12px;">Back to Details</a>
-                        <a href="../../../index.php?logout=1" class="signout-btn">Sign Out</a>
+                        <a href="../../../logout.php" class="signout-btn">Sign Out</a>
                     </div>
                 </header>
 

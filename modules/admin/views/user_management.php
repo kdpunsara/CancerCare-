@@ -3,7 +3,7 @@ session_start();
 require_once __DIR__ . '/../../../config/database.php';
 
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-    header("Location: ../../../index.php");
+    header("Location: ../../../login.php");
     exit();
 }
 
@@ -262,7 +262,15 @@ if (isset($_GET['edit'])) {
                     <?php if ($selected_role === 'doctor'): ?>
                         <div class="form-field">
                             <label>Specialization</label>
-                            <input type="text" name="specialization" placeholder="e.g. Medical Oncology">
+                            <select name="specialization">
+                                <option value="">Select Specialization</option>
+                                <option value="Consultant Anaesthesiologist">Consultant Anaesthesiologist</option>
+                                <option value="Chemical Pathologist">Chemical Pathologist</option>
+                                <option value="Clinical Oncologist">Clinical Oncologist</option>
+                                <option value="ENT,Head & Neck Surgeon">ENT,Head & Neck Surgeon</option>
+                                <option value="Radiation & Medical Oncology">Radiation & Medical Oncology</option>
+                                <option value="Nutrition Physician">Nutrition Physician</option>
+                            </select>
                         </div>
                         <div class="form-field">
                             <label>Qualification</label>
@@ -480,7 +488,16 @@ if (isset($_GET['edit'])) {
                         <?php if ($edit_user['role'] === 'doctor'): ?>
                             <div class="form-field">
                                 <label>Specialization</label>
-                                <input type="text" name="specialization" value="<?php echo htmlspecialchars($edit_user['specialization'] ?? ''); ?>">
+                                <select name="specialization">
+                                    <option value="">Select Specialization</option>
+                                    <?php 
+                                    $specs = ['Consultant Anaesthesiologist', 'Chemical Pathologist', 'Clinical Oncologist', 'ENT,Head & Neck Surgeon', 'Radiation & Medical Oncology', 'Nutrition Physician'];
+                                    foreach($specs as $s) {
+                                        $selected = ($edit_user['specialization'] ?? '') === $s ? 'selected' : '';
+                                        echo "<option value=\"$s\" $selected>$s</option>";
+                                    }
+                                    ?>
+                                </select>
                             </div>
                             <div class="form-field">
                                 <label>Qualification</label>

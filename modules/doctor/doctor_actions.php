@@ -3,14 +3,14 @@ session_start();
 require_once __DIR__ . '/../../config/database.php';
 
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'doctor') {
-    header("Location: ../../index.php");
+    header("Location: ../../login.php");
     exit();
 }
 
 $doctor_id = $_SESSION['user_id'];
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header("Location: views/doctor_appointments.php");
+    header("Location: views/appointments.php");
     exit();
 }
 
@@ -98,9 +98,9 @@ switch ($action) {
         $stmt->bind_param("sii", $new_status, $appt_id, $doctor_id);
 
         if ($stmt->execute()) {
-            header("Location: views/doctor_appointments.php?msg=status_updated");
+            header("Location: views/appointments.php?msg=status_updated");
         } else {
-            header("Location: views/doctor_appointments.php?error=db_error");
+            header("Location: views/appointments.php?error=db_error");
         }
         exit();
 
@@ -117,9 +117,9 @@ switch ($action) {
         $stmt->bind_param("iissss", $patient_id, $doctor_id, $appt_date, $appt_time, $appt_type, $reason);
 
         if ($stmt->execute()) {
-            header("Location: views/doctor_appointments.php?msg=appointment_added");
+            header("Location: views/appointments.php?msg=appointment_added");
         } else {
-            header("Location: views/doctor_appointments.php?error=db_error");
+            header("Location: views/appointments.php?error=db_error");
         }
         exit();
 
@@ -357,6 +357,6 @@ switch ($action) {
         }
 
     default:
-        header("Location: views/doctor_appointments.php?error=invalid_action");
+        header("Location: views/appointments.php?error=invalid_action");
         exit();
 }

@@ -82,3 +82,4 @@ $current_page = $current_page ?? 'dashboard';
         </div>
     </div>
 </aside>
+<script src="../../../public/js/move-user-to-topbar.js" defer></script>

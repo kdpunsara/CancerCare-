@@ -129,7 +129,7 @@ $current_page = 'appointments'; // Change this to 'dashboard', 'prescriptions', 
                 
                 <!-- Search and Filter Section -->
                 <div class="card form-card" style="padding-bottom: 24px; margin-bottom: 24px;">
-                    <form method="GET" action="doctor_appointments.php" class="doctor-filter-form">
+                    <form method="GET" action="appointments.php" class="doctor-filter-form">
                         <div class="form-field">
                             <label>Search Patient</label>
                             <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search by name or ID...">

@@ -63,9 +63,9 @@
     </nav>
 
     <div class="sidebar-user">
-      <div class="avatar">SJ</div>
+      <div class="avatar"><?= htmlspecialchars($patient_initials) ?></div>
       <div>
-        <p class="user-name">Sandun Jayasekara</p>
+        <p class="user-name"><?= htmlspecialchars($full_name) ?></p>
         <p class="user-role">Patient</p>
       </div>
     </div>
@@ -139,5 +139,6 @@
   </main>
 </div>
 
+<script src="../../../public/js/move-user-to-topbar.js" defer></script>
 </body>
 </html>

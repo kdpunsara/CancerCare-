@@ -15,7 +15,7 @@ if (isset($_SESSION['user_id'])) {
         case 'pharmacist': header("Location: modules/pharmacist/views/dashboard.php"); break;
         case 'benefactor': header("Location: modules/benefactor/views/dashboard.php"); break;
         case 'admin': header("Location: modules/admin/views/admin_dashboard.php"); break;
-        default: header("Location: index.php"); break;
+        default: header("Location: home.html"); break;
     }
     exit();
 }
@@ -72,7 +72,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     case 'pharmacist': header("Location: modules/pharmacist/views/dashboard.php"); break;
                     case 'benefactor': header("Location: modules/benefactor/views/dashboard.php"); break;
                     case 'admin': header("Location: modules/admin/views/admin_dashboard.php"); break;
-                    default: header("Location: index.php"); break;
+                    default: header("Location: home.html"); break;
                 }
                 exit();
             } else {

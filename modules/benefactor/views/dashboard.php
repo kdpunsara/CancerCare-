@@ -127,7 +127,7 @@ function getDonationBadge($status) {
                         <div class="list-card-header"><h3>Make a Donation</h3></div>
                         <p style="padding: 0 20px 20px; font-size: 13.5px; color: var(--text-muted); margin: 0;">Give medication or financial aid, directly or to a specific patient.</p>
                     </a>
-                    <a href="patients_needing_support.php" class="card list-card" style="text-decoration: none; color: inherit; transition: transform 0.2s;">
+                    <a href="patients.php" class="card list-card" style="text-decoration: none; color: inherit; transition: transform 0.2s;">
                         <div class="list-card-header"><h3>Patients Needing Support</h3></div>
                         <p style="padding: 0 20px 20px; font-size: 13.5px; color: var(--text-muted); margin: 0;">See verified, current requests for medication and financial aid.</p>
                     </a>

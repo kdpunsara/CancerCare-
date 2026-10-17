@@ -8,7 +8,16 @@
                 </button>
                 <h1><?php echo e($page_title ?? 'Pharmacy'); ?></h1>
             </div>
-            <div class="topbar-right">
+            <div class="topbar-right" style="display: flex; flex-direction: row; align-items: center; gap: 16px;">
+                <div class="topbar-user user-card">
+                    <div class="user-avatar" style="background: linear-gradient(135deg, #0f766e, #0284c7);">
+                        <?php echo e($pharmacist_initials); ?>
+                    </div>
+                    <div class="user-info">
+                        <strong><?php echo e($pharmacist_name); ?></strong>
+                        <span>Pharmacist</span>
+                    </div>
+                </div>
                 <a href="../../../logout.php" class="btn btn-primary">Sign Out</a>
             </div>
         </header>

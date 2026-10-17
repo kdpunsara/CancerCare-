@@ -58,16 +58,15 @@ foreach ($res->fetch_all(MYSQLI_ASSOC) as $medicine) {
                 <form class="pure-form" action="../pharmacist_action.php" method="POST">
                     <?php echo csrf_field(); ?>
                     <input type="hidden" name="action" value="add_drug">
-                    <input type="hidden" id="medicine-id" name="medicine_id" value="">
                     <div class="form-group">
                         <label for="drug-name">Drug Name / Brand <span class="req">*</span></label>
                         <input type="text" id="drug-name" name="medicine_name" maxlength="200" list="medicine-list" value="<?php echo e($old['medicine_name']); ?>" placeholder="Search or enter a new medicine" required>
                         <datalist id="medicine-list">
                             <?php foreach ($medicine_options as $medicine): ?>
-                                <option value="<?php echo e($medicine['medicine_name']); ?>" data-medicine-id="<?php echo (int) $medicine['medicine_id']; ?>" data-generic-name="<?php echo e($medicine['generic_name']); ?>" data-category="<?php echo e($medicine['category']); ?>" data-manufacturer="<?php echo e($medicine['manufacturer']); ?>"></option>
+                                <option value="<?php echo e($medicine['medicine_name']); ?>" data-generic-name="<?php echo e($medicine['generic_name']); ?>" data-category="<?php echo e($medicine['category']); ?>" data-manufacturer="<?php echo e($medicine['manufacturer']); ?>"></option>
                             <?php endforeach; ?>
                         </datalist>
-                        <span class="field-hint">Choose an existing medicine to fill its catalog details automatically, or enter a new one.</span>
+                        <span class="field-hint">Choose an existing medicine to fill its details, or enter a different manufacturer to register it separately.</span>
                     </div>
 
                     <div class="form-group">
@@ -119,13 +118,11 @@ foreach ($res->fetch_all(MYSQLI_ASSOC) as $medicine) {
 </div>
 <script>
 const drugNameInput = document.getElementById('drug-name');
-const medicineIdInput = document.getElementById('medicine-id');
 const medicineOptions = Array.from(document.querySelectorAll('#medicine-list option'));
 
 drugNameInput.addEventListener('input', function () {
     const selected = medicineOptions.find(option => option.value === drugNameInput.value);
 
-    medicineIdInput.value = selected ? selected.dataset.medicineId : '';
     if (!selected) {
         return;
     }

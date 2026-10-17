@@ -66,9 +66,9 @@ require_once __DIR__ . '/../patient_data.php';
     </nav>
 
     <div class="sidebar-user">
-      <div class="avatar">SJ</div>
+      <div class="avatar"><?= htmlspecialchars($patient_initials) ?></div>
       <div>
-        <p class="user-name">Sandun Jayasekara</p>
+        <p class="user-name"><?= htmlspecialchars($full_name) ?></p>
         <p class="user-role">Patient</p>
       </div>
     </div>
@@ -172,7 +172,6 @@ require_once __DIR__ . '/../patient_data.php';
         <?php if ($transport_search !== ''): ?>
           <p class="search-result-note">
             Showing buses matching <strong><?= htmlspecialchars($transport_search) ?></strong>.
-            <a href="patient_transport.php">Clear search</a>
           </p>
         <?php endif; ?>
 
@@ -221,5 +220,19 @@ require_once __DIR__ . '/../patient_data.php';
   </main>
 </div>
 
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const searchInput = document.querySelector('input[name="q"]');
+  if (!searchInput) return;
+
+  searchInput.addEventListener('input', function () {
+    if (searchInput.value.trim() === '') {
+      window.location.href = 'patient_transport.php#bus-results';
+    }
+  });
+});
+</script>
+
+<script src="../../../public/js/move-user-to-topbar.js" defer></script>
 </body>
 </html>

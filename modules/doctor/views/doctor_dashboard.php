@@ -6,7 +6,7 @@ session_start();
 require_once __DIR__ . '/../../../config/database.php';
 
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'doctor') {
-    header("Location: ../../../index.php");
+    header("Location: ../../../login.php");
     exit();
 }
 
@@ -118,7 +118,7 @@ $current_page = 'dashboard'; // Change this to 'dashboard', 'prescriptions', etc
                     <div class="card list-card">
                         <div class="list-card-header">
                             <h3>Today's Appointments</h3>
-                            <a href="doctor_appointments.php" class="view-all">View All</a>
+                            <a href="appointments.php" class="view-all">View All</a>
                         </div>
                         
                         <div class="appointment-list">
@@ -133,9 +133,9 @@ $current_page = 'dashboard'; // Change this to 'dashboard', 'prescriptions', etc
                                         </div>
                                         <div class="appointment-info">
                                             <p class="appointment-name"><?php echo $appt['first_name'] . ' ' . $appt['last_name']; ?></p>
-                                            <p class="appointment-desc">P-<?php echo $appt['patient_user_id']; ?> • Age: <?php echo calculateAge($appt['dob']); ?> • <?php echo htmlspecialchars($appt['appointment_type']); ?></p>
+                                            <p class="appointment-desc">P-<?php echo $appt['patient_user_id']; ?> • Age: <?php echo calculateAge($appt['dob']); ?><?php echo !empty($appt['appointment_type']) ? ' • ' . htmlspecialchars($appt['appointment_type']) : ''; ?></p>
                                         </div>
-                                        <a href="view_appointment.php?id=<?php echo $appt['appointment_id']; ?>" class="link-action">View</a>
+                                        <a href="view_records.php?patient=<?php echo $appt['patient_user_id']; ?>" class="link-action">View</a>
                                     </div>
                                 <?php endforeach; ?>
                             <?php endif; ?>

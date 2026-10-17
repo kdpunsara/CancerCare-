@@ -4,7 +4,7 @@ require_once __DIR__ .  '/../../../config/database.php';
 
 // Security Check
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'benefactor') {
-    header("Location: ../../../index.php");
+    header("Location: ../../../login.php");
     exit();
 }
 
@@ -216,7 +216,7 @@ function calculateAge($dob) {
                                 </div>
 
                                 <div class="need-actions">
-                                    <a href="make_donation.php?need_id=<?php echo $need['need_id']; ?>" class="btn-primary" style="flex: 1; text-align: center; text-decoration: none; padding: 10px;">Support This Patient</a>
+                                    <a href="make_donation.php?need=<?php echo $need['need_id']; ?>" class="btn-primary" style="flex: 1; text-align: center; text-decoration: none; padding: 10px;">Support This Patient</a>
                                     <a href="#" class="btn-secondary" style="text-decoration: none; padding: 10px;">View Details</a>
                                 </div>
                             </div>
