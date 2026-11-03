@@ -425,7 +425,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
         .btn-login:hover  { background: var(--blue-dark); box-shadow: 0 4px 14px rgba(79, 110, 247, 0.35); }
         .btn-login:active { transform: translateY(1px); }
-
+        .btn-register {
+            width: 100%;
+            margin-top: 12px;
+            padding: 13px;
+            background: var(--card);
+            color: var(--blue);
+            border: 1px solid var(--blue);
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            transition: background .15s, color .15s, transform .1s;
+        }
+        .btn-register:hover { background: var(--blue); color: #fff; text-decoration: none; }
+        .btn-register:active { transform: translateY(1px); }
         /* Footer links */
         .form-footer {
             text-align: center;
@@ -606,6 +625,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     Sign In to Dashboard
                 </button>
             </form>
+            <div class="registration-cta">
+                <p>New patient?</p>
+                <a href="modules/patient/views/patient_register.php" class="btn-register">Create a new patient account</a>
+            </div>
+            <?php if (($_GET["msg"] ?? "") === "registration_success"): ?><p role="status">Account created. Sign in using your email address.</p><?php endif; ?>
 
             <!-- Footer links -->
             <div class="form-footer">
