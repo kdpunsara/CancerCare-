@@ -1,144 +1,167 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Create Account — Apeksha OncoCare</title>
-<link rel="stylesheet" href="../../../public/css/base.css?v=3">
-<link rel="stylesheet" href="../../../public/css/auth.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Create a patient account</title>
+    <link rel="stylesheet" href="../../../public/css/auth.css">
+    <style>
+        body {
+            min-height: 100vh;
+            padding: 24px;
+            background: #f2f4f9;
+            font-family: Arial, sans-serif;
+        }
+        main {
+            width: 100%;
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 32px;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 12px 36px rgba(16, 24, 40, .1);
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+        }
+        label {
+            display: block;
+            margin-top: 16px;
+            font-weight: 600;
+        }
+        input, select {
+            box-sizing: border-box;
+            width: 100%;
+            margin-top: 6px;
+            padding: 12px;
+            border: 1px solid #cbd2e0;
+            border-radius: 6px;
+            font: inherit;
+        }
+        .full-width { grid-column: 1 / -1; }
+        button {
+            width: 100%;
+            margin-top: 22px;
+            padding: 14px;
+            border: 0;
+            border-radius: 6px;
+            background: #243e85;
+            color: #fff;
+            font: inherit;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .notice {
+            margin: 16px 0;
+            padding: 12px 14px;
+            border-radius: 6px;
+            background: #fff1f0;
+            color: #9f1d20;
+        }
+        @media (max-width: 560px) {
+            body { padding: 12px; }
+            main { padding: 22px; }
+            .form-grid { grid-template-columns: 1fr; }
+            .full-width { grid-column: auto; }
+        }
+    </style>
 </head>
 <body>
+<main>
+    <h1>Create a patient account</h1>
+    <p>Register your contact and personal details to access your care online. Medical information and doctor assignment can be completed by your care team.</p>
 
-<div class="app">
+    <?php
+    $error = isset($_GET['error']) ? $_GET['error'] : '';
+    $errorMessages = [
+        'invalid_registration' => 'Check your details. Passwords must match and be at least 8 characters long.',
+        'duplicate' => 'That email address or NIC is already registered. Try signing in or contact the care team.',
+        'registration_failed' => 'We could not create your account. Please try again or contact the care team.'
+    ];
+    if (isset($errorMessages[$error])):
+    ?>
+        <p class="notice" role="alert"><?= htmlspecialchars($errorMessages[$error], ENT_QUOTES, 'UTF-8') ?></p>
+    <?php endif; ?>
 
-  <aside class="sidebar">
- <div class="brand">
-      <div class="brand-mark">CC</div>
-      <div class="brand-text">
-        <h1>Apeksha<br>CancerCare</h1>
-        <p>Cancer Patient Care</p>
-      </div>
-    </div>
+    <form action="../patient_actions.php" method="post">
+        <input type="hidden" name="action" value="register_patient">
 
-    <nav class="nav">
-      <p class="nav-label">Navigation</p>
-      <ul>
-        <li><a href="patient_dashboard.php" class="nav-item" title="My Dashboard">
-          <span class="icon icon-dashboard" aria-hidden="true"></span>
-          <span class="nav-text">My Dashboard</span>
-        </a></li>
-        <li><a href="patient_profile_edit.php" class="nav-item" title="My Profile">
-          <span class="icon icon-profile" aria-hidden="true"></span>
-          <span class="nav-text">My Profile</span>
-        </a></li>
-        <li><a href="patient_appointments.php" class="nav-item" title="Appointments">
-          <span class="icon icon-appointments" aria-hidden="true"></span>
-          <span class="nav-text">Appointments</span>
-        </a></li>
-        <li><a href="patient_records.php" class="nav-item" title="Medical Records">
-          <span class="icon icon-records" aria-hidden="true"></span>
-          <span class="nav-text">Medical Records</span>
-        </a></li>
-        <li><a href="patient_prescriptions.php" class="nav-item" title="Prescriptions">
-          <span class="icon icon-prescriptions" aria-hidden="true"></span>
-          <span class="nav-text">Prescriptions</span>
-        </a></li>
-        <li><a href="patient_wellness.php" class="nav-item" title="Wellness & Meals">
-          <span class="icon icon-wellness" aria-hidden="true"></span>
-          <span class="nav-text">Wellness & Meals</span>
-        </a></li>
-        <li><a href="patient_transport.php" class="nav-item" title="Transport">
-          <span class="icon icon-transport" aria-hidden="true"></span>
-          <span class="nav-text">Transport</span>
-        </a></li>
-        <li><a href="patient_drug_availability.php" class="nav-item" title="Drug Availability">
-          <span class="icon icon-drug" aria-hidden="true"></span>
-          <span class="nav-text">Drug Availability</span>
-        </a></li>
-        <li><a href="patient_motivation.php" class="nav-item" title="Motivation">
-          <span class="icon icon-motivation" aria-hidden="true"></span>
-          <span class="nav-text">Motivation</span>
-        </a></li>
-      </ul>
-    </nav>
-
-    <div class="sidebar-user">
-      <div class="avatar"><?= htmlspecialchars($patient_initials) ?></div>
-      <div>
-        <p class="user-name"><?= htmlspecialchars($full_name) ?></p>
-        <p class="user-role">Patient</p>
-      </div>
-    </div>
-  </aside>
-
-  <main class="main">
-
-    <header class="topbar">
-      <div class="topbar-left">
-        <div>
-          <h2>Create Account</h2>
-          <p class="date">Register as a new patient</p>
-        </div>
-      </div>
-      <div class="topbar-actions">
-        <a href="../../../logout.php" class="signout-btn">Sign Out</a>
-      </div>
-    </header>
-
-    <section class="content">
-
-      <div class="auth-page-wrap">
-        <div class="auth-card auth-card-wide">
-          <h2 class="auth-title">Create your account</h2>
-          <p class="auth-subtitle">Register as a patient to track your care online.</p>
-
-          <form class="app-form" action="../patient_actions.php" method="post">
-            <input type="hidden" name="action" value="register_patient">
-
-            <div class="form-grid">
-              <div class="form-field">
-                <label for="reg-name">Full Name</label>
-                <input type="text" id="reg-name" name="full_name" placeholder="Your full name" required>
-              </div>
-              <div class="form-field">
-                <label for="reg-nic">NIC Number</label>
-                <input type="text" id="reg-nic" name="nic" placeholder="200012345678" required>
-              </div>
-              <div class="form-field">
-                <label for="reg-dob">Date of Birth</label>
-                <input type="date" id="reg-dob" name="dob" required>
-              </div>
-              <div class="form-field">
-                <label for="reg-mobile">Mobile Number</label>
-                <input type="tel" id="reg-mobile" name="phone" placeholder="+94 7X XXX XXXX" required>
-              </div>
-              <div class="form-field form-field-wide">
-                <label for="reg-email">Email Address</label>
-                <input type="email" id="reg-email" name="email" placeholder="you@email.com" required>
-              </div>
-              <div class="form-field">
-                <label for="reg-password">Password</label>
-                <input type="password" id="reg-password" name="password" placeholder="Create a password" minlength="8" required>
-              </div>
-              <div class="form-field">
-                <label for="reg-confirm">Confirm Password</label>
-                <input type="password" id="reg-confirm" name="confirm_password" placeholder="Re-enter your password" minlength="8" required>
-              </div>
-            </div>
-
-            <label class="checkbox-label checkbox-terms">
-              <input type="checkbox" required> I agree to the Terms of Service and Privacy Policy
+        <div class="form-grid">
+            <label>
+                First name
+                <input type="text" name="first_name" maxlength="100" autocomplete="given-name" required>
             </label>
-
-            <button type="submit" class="btn-primary btn-full">Create Account</button>
-          </form>
+            <label>
+                Last name
+                <input type="text" name="last_name" maxlength="100" autocomplete="family-name" required>
+            </label>
+            <label>
+                NIC number
+                <input type="text" name="nic" maxlength="20" required>
+            </label>
+            <label>
+                Date of birth
+                <input type="date" name="dob" max="<?= date('Y-m-d') ?>" autocomplete="bday" required>
+            </label>
+            <label>
+                Gender
+                <select name="gender" required>
+                    <option value="">Select gender</option>
+                    <option value="female">Female</option>
+                    <option value="male">Male</option>
+                    <option value="other">Other</option>
+                </select>
+            </label>
+            <label>
+                Phone number
+                <input type="tel" name="phone" maxlength="20" autocomplete="tel" required>
+            </label>
+            <label class="full-width">
+                Email address
+                <input type="email" name="email" maxlength="100" autocomplete="email" required>
+            </label>
+            <label>
+                Address
+                <input type="text" name="address" autocomplete="street-address">
+            </label>
+            <label>
+                City
+                <input type="text" name="city" maxlength="100" autocomplete="address-level2">
+            </label>
+            <label>
+                Blood group (optional)
+                <select name="blood_group">
+                    <option value="">Select blood group</option>
+                    <option value="O+">O+</option>
+                    <option value="O-">O-</option>
+                    <option value="A+">A+</option>
+                    <option value="A-">A-</option>
+                    <option value="B+">B+</option>
+                    <option value="B-">B-</option>
+                    <option value="AB+">AB+</option>
+                    <option value="AB-">AB-</option>
+                </select>
+            </label>
+            <label>
+                Emergency contact (optional)
+                <input type="tel" name="emergency_contact" maxlength="20">
+            </label>
         </div>
-      </div>
 
-    </section>
-  </main>
-</div>
+        <label>
+            Password
+            <input type="password" name="password" minlength="8" autocomplete="new-password" required>
+        </label>
+        <label>
+            Confirm password
+            <input type="password" name="confirm_password" minlength="8" autocomplete="new-password" required>
+        </label>
+        <button type="submit">Create account</button>
+    </form>
 
-<script src="../../../public/js/move-user-to-topbar.js" defer></script>
+    <p>Already registered? <a href="../../../login.php">Sign in</a></p>
+</main>
 </body>
 </html>
