@@ -191,6 +191,8 @@ switch ($action) {
         header("Location: views/doctor_prescription.php?view=" . $prescription_id);
         exit();
 
+
+
     case 'update_prescription':
         $prescription_id = intval($_POST['prescription_id'] ?? 0);
         $diagnosis_notes = $conn->real_escape_string($_POST['diagnosis_notes'] ?? '');
@@ -359,4 +361,94 @@ switch ($action) {
     default:
         header("Location: views/appointments.php?error=invalid_action");
         exit();
+
+            // --- ACTION: ASSIGN / EDIT A MEAL PLAN ---
+    case 'assign_meal_plan':
+            $patient_input = trim($_POST['patient_user_id'] ?? '');
+            $patient_input = preg_replace('/^\s*p\s*-\s*/i', '', $patient_input);
+            $patient_id    = ctype_digit($patient_input) ? intval($patient_input) : 0;
+            $plan_type     = $_POST['plan_type'] ?? 'template';
+            $template_id   = intval($_POST['template_id'] ?? 0);
+            $dietary       = trim($_POST['dietary_restrictions'] ?? '');
+            $weeks         = max(1, min(4, intval($_POST['duration_weeks'] ?? 1)));
+            $duration_days = $weeks * 7;
+
+            if ($patient_id <= 0) {
+                header("Location: views/doctor_mealplan.php?new=1&error=plan_failed");
+                exit();
+            }
+
+            $conn->begin_transaction();
+            try {
+                // Replace any existing current/future plan for this patient (supports Edit)
+                $del = $conn->prepare("DELETE FROM mealplan WHERE patient_user_id = ? AND doctor_user_id = ? AND plan_date >= CURDATE()");
+                $del->bind_param("ii", $patient_id, $doctor_id);
+                $del->execute();
+
+                $ins = $conn->prepare("INSERT INTO mealplan
+                            (patient_user_id, doctor_user_id, template_id, plan_date, meal_type, menu_description, dietary_restrictions, nutritional_notes)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+
+                if ($plan_type === 'template' && $template_id > 0) {
+                    // Fetch template guidelines
+                    $stmt_t = $conn->prepare("SELECT nutritional_guidelines FROM mealplantemplate WHERE template_id = ?");
+                    $stmt_t->bind_param("i", $template_id);
+                    $stmt_t->execute();
+                    $tpl = $stmt_t->get_result()->fetch_assoc();
+                    if (!$tpl) throw new Exception('Template not found');
+                    $notes = $tpl['nutritional_guidelines'];
+
+                    // Fetch template items grouped by weekday
+                    $stmt_i = $conn->prepare("SELECT day_of_week, meal_type, menu_description FROM mealplantemplateitem WHERE template_id = ?");
+                    $stmt_i->bind_param("i", $template_id);
+                    $stmt_i->execute();
+                    $items = [];
+                    foreach ($stmt_i->get_result()->fetch_all(MYSQLI_ASSOC) as $it) {
+                        $items[$it['day_of_week']][] = $it;
+                    }
+                    if (empty($items)) throw new Exception('Template has no meal items');
+
+                    $custom_template_meals = $_POST['template_meals'] ?? [];
+                    // Generate one row per meal per day for the whole duration
+                    for ($d = 0; $d < $duration_days; $d++) {
+                        $date = date('Y-m-d', strtotime("+$d day"));
+                        $dow  = date('l', strtotime($date));
+                        foreach ($items[$dow] ?? [] as $it) {
+                            $submitted_menu = $custom_template_meals[$dow][$it['meal_type']] ?? null;
+                            $menu = ($submitted_menu !== null && trim($submitted_menu) !== '')
+                                ? trim($submitted_menu)
+                                : $it['menu_description'];
+                            if ($menu === '') throw new Exception('Template meal cannot be empty');
+                            $ins->bind_param("iiisssss", $patient_id, $doctor_id, $template_id, $date, $it['meal_type'], $menu, $dietary, $notes);
+                            $ins->execute();
+                        }
+                    }
+                } else {
+                    // Custom plan: repeat the 4 daily menus across the duration
+                    $meals = array_filter([
+                        'Breakfast' => trim($_POST['custom_breakfast'] ?? ''),
+                        'Lunch'     => trim($_POST['custom_lunch'] ?? ''),
+                        'Snack'     => trim($_POST['custom_snack'] ?? ''),
+                        'Dinner'    => trim($_POST['custom_dinner'] ?? ''),
+                    ]);
+                    $notes = trim($_POST['nutritional_notes'] ?? '');
+                    if (empty($meals)) throw new Exception('Enter at least one meal');
+
+                    $null_tpl = null;
+                    for ($d = 0; $d < $duration_days; $d++) {
+                        $date = date('Y-m-d', strtotime("+$d day"));
+                        foreach ($meals as $meal_type => $menu) {
+                            $ins->bind_param("iiisssss", $patient_id, $doctor_id, $null_tpl, $date, $meal_type, $menu, $dietary, $notes);
+                            $ins->execute();
+                        }
+                    }
+                }
+
+                $conn->commit();
+                header("Location: views/doctor_mealplan.php?msg=plan_assigned");
+            } catch (Exception $e) {
+                $conn->rollback();
+                header("Location: views/doctor_mealplan.php?assign=" . $patient_id . "&error=plan_failed");
+            }
+            exit();    
 }
