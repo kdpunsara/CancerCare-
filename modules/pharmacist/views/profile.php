@@ -6,7 +6,6 @@ $current_page = 'profile';
 $page_title   = 'User Profile';
 require_once __DIR__ . '/../../../includes/pharmacist_init.php';
 
-$errors = [];
 // Form values (start from the database, overwritten by a failed submit so nothing is lost)
 $form = [
     'email'   => $pharmacist['email'],
@@ -43,10 +42,6 @@ $form = [
                 </div>
 
                 <?php flash_render(); ?>
-                <?php foreach ($errors as $err): ?>
-                    <div class="alert alert-error"><?php echo e($err); ?></div>
-                <?php endforeach; ?>
-
                 <form class="pure-form" action="../pharmacist_action.php" method="POST">
                     <?php echo csrf_field(); ?>
                     <input type="hidden" name="action" value="update_profile">
@@ -113,15 +108,5 @@ $form = [
         </div>
     </main>
 </div>
-<script>
-function openSidebar() {
-    document.getElementById('sidebar').classList.add('open');
-    document.getElementById('sidebarOverlay').classList.add('show');
-}
-function closeSidebar() {
-    document.getElementById('sidebar').classList.remove('open');
-    document.getElementById('sidebarOverlay').classList.remove('show');
-}
-</script>
 </body>
 </html>

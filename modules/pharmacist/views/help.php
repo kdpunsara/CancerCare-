@@ -6,7 +6,6 @@ $current_page = 'help';
 $page_title   = 'Help Documentation';
 require_once __DIR__ . '/../../../includes/pharmacist_init.php';
 
-$errors  = [];
 $subject = '';
 $message = '';
 
@@ -39,8 +38,8 @@ $message = '';
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 16px;">
                     <div>
-                        <strong style="display:block; margin-bottom: 4px; color: var(--primary);">How do I register a medicine that is not in the catalog?</strong>
-                        <p style="font-size: 0.9rem; color: var(--gray-600);">Use "Add New Drug". Enter the brand name, optional generic name and manufacturer, a category, the opening stock, and the batch number and expiry date of that first batch. The medicine is added to the shared hospital catalog and to your inventory.</p>
+                        <strong style="display:block; margin-bottom: 4px; color: var(--primary);">What if a medicine is not in the catalog?</strong>
+                        <p style="font-size: 0.9rem; color: var(--gray-600);">Pharmacists can select only existing medicines from the central Medicine Master. Contact an administrator to add a missing medicine type before registering its stock.</p>
                     </div>
                     <hr style="border: 0; border-top: 1px solid var(--gray-200);">
                     <div>
@@ -69,10 +68,6 @@ $message = '';
                     If you encounter software errors or require administrative inventory privilege corrections, please send a technical ticket down below.
                 </p>
 
-                <?php foreach ($errors as $err): ?>
-                    <div class="alert alert-error"><?php echo e($err); ?></div>
-                <?php endforeach; ?>
-
                 <form class="pure-form" action="../pharmacist_action.php" method="POST">
                     <?php echo csrf_field(); ?>
                     <input type="hidden" name="action" value="support_ticket">
@@ -92,15 +87,5 @@ $message = '';
         </div>
     </main>
 </div>
-<script>
-function openSidebar() {
-    document.getElementById('sidebar').classList.add('open');
-    document.getElementById('sidebarOverlay').classList.add('show');
-}
-function closeSidebar() {
-    document.getElementById('sidebar').classList.remove('open');
-    document.getElementById('sidebarOverlay').classList.remove('show');
-}
-</script>
 </body>
 </html>

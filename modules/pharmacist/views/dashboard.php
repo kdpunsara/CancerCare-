@@ -10,18 +10,15 @@ require_once __DIR__ . '/../../../includes/pharmacist_init.php';
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
 
-// ---- Load this pharmacist's inventory, one row per medicine ----
-// Expired batches are NOT counted as available stock.
+// ---- Load this pharmacist's inventory, one row per manufacturer/batch ----
 $sql = "SELECT m.medicine_id, m.medicine_name, m.generic_name, m.category, m.manufacturer,
-               COALESCE(SUM(CASE WHEN i.expiry_date >= CURDATE() THEN i.stock_quantity ELSE 0 END), 0) AS available_qty,
-               COALESCE(SUM(CASE WHEN i.expiry_date <  CURDATE() THEN i.stock_quantity ELSE 0 END), 0) AS expired_qty,
-               GROUP_CONCAT(i.batch_number ORDER BY i.expiry_date SEPARATOR ', ') AS batches
+               i.inventory_id, i.batch_number, i.stock_quantity, i.expiry_date,
+               CASE WHEN i.expiry_date >= CURDATE() THEN i.stock_quantity ELSE 0 END AS available_qty,
+               CASE WHEN i.expiry_date < CURDATE() THEN i.stock_quantity ELSE 0 END AS expired_qty
         FROM PharmacyInventory i
         JOIN Medicine m ON m.medicine_id = i.medicine_id
-                WHERE i.pharmacist_user_id = ?
-                    AND i.expiry_date >= CURDATE()
-        GROUP BY m.medicine_id, m.medicine_name, m.generic_name, m.category, m.manufacturer
-        ORDER BY m.medicine_name ASC";
+        WHERE i.pharmacist_user_id = ?
+        ORDER BY m.manufacturer ASC, m.medicine_name ASC, i.batch_number ASC, i.expiry_date ASC";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $pharmacist_id);
 $stmt->execute();
@@ -29,15 +26,26 @@ $all_drugs = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
 // ---- KPI cards (always based on the full inventory, not the search result) ----
-$total_types = count($all_drugs);
+$medicine_totals = [];
+foreach ($all_drugs as $d) {
+    $medicine_id = (int) $d['medicine_id'];
+    if (!isset($medicine_totals[$medicine_id])) {
+        $medicine_totals[$medicine_id] = ['available_qty' => 0];
+    }
+    $medicine_totals[$medicine_id]['available_qty'] += (int) $d['available_qty'];
+}
+
+$total_types = count($medicine_totals);
 $low_alerts  = 0;
 $total_qty   = 0;
 $categories  = [];
-foreach ($all_drugs as $d) {
-    $total_qty += (int) $d['available_qty'];
-    if ((int) $d['available_qty'] <= LOW_STOCK_THRESHOLD) {
+foreach ($medicine_totals as $medicine) {
+    $total_qty += $medicine['available_qty'];
+    if ($medicine['available_qty'] <= LOW_STOCK_THRESHOLD) {
         $low_alerts++;
     }
+}
+foreach ($all_drugs as $d) {
     if (!empty($d['category'])) {
         $categories[$d['category']] = true;
     }
@@ -56,7 +64,7 @@ $drugs    = array_filter($all_drugs, function ($d) use ($q, $cat) {
     }
     $haystack = implode(' ', [
         $d['medicine_name'], $d['generic_name'], $d['manufacturer'],
-        $d['batches'], drug_code($d['medicine_id']),
+        $d['batch_number'], drug_code($d['medicine_id']),
     ]);
     return stripos($haystack, $q) !== false;
 });
@@ -139,15 +147,17 @@ $drugs    = array_filter($all_drugs, function ($d) use ($q, $cat) {
                                 <th>Medicine Details</th>
                                 <th>Category</th>
                                 <th>Manufacturer</th>
+                                <th>Batch / Lot No.</th>
+                                <th>Expiry Date</th>
                                 <th>Stock Status</th>
-                                <th style="text-align: right;">Available Qty</th>
+                                <th style="text-align: right;">Batch Qty</th>
                                 <th style="text-align: center;">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php if (empty($drugs)): ?>
                                 <tr>
-                                    <td colspan="7" style="text-align:center; padding:28px; color:var(--gray-500);">
+                                    <td colspan="9" style="text-align:center; padding:28px; color:var(--gray-500);">
                                         <?php echo $total_types === 0
                                             ? 'Your inventory is empty. Use "Add New Drug" to register your first medicine.'
                                             : 'No medicines match your search.'; ?>
@@ -156,7 +166,11 @@ $drugs    = array_filter($all_drugs, function ($d) use ($q, $cat) {
                             <?php endif; ?>
                             <?php foreach ($drugs as $d):
                                 [$pill_class, $pill_label] = stock_status((int) $d['available_qty']);
-                                $detail = trim(($d['generic_name'] ?: '') . ($d['batches'] ? ' (' . $d['batches'] . ')' : ''));
+                                $detail = trim($d['generic_name'] ?: '');
+                                if ((int) $d['expired_qty'] > 0) {
+                                    $pill_class = 'critical';
+                                    $pill_label = 'Expired';
+                                }
                             ?>
                             <tr>
                                 <td><strong><?php echo e(drug_code($d['medicine_id'])); ?></strong></td>
@@ -170,16 +184,15 @@ $drugs    = array_filter($all_drugs, function ($d) use ($q, $cat) {
                                 </td>
                                 <td><?php echo e($d['category'] ?: '—'); ?></td>
                                 <td><?php echo e($d['manufacturer'] ?: '—'); ?></td>
+                                <td><?php echo e($d['batch_number'] ?: '—'); ?></td>
+                                <td><?php echo e($d['expiry_date']); ?></td>
                                 <td><span class="status-pill <?php echo $pill_class; ?>"><?php echo $pill_label; ?></span></td>
                                 <td style="text-align: right; font-weight:700;">
-                                    <?php echo number_format((int) $d['available_qty']); ?>
-                                    <?php if ((int) $d['expired_qty'] > 0): ?>
-                                        <span class="muted-note">+<?php echo number_format((int) $d['expired_qty']); ?> expired</span>
-                                    <?php endif; ?>
+                                    <?php echo number_format((int) $d['stock_quantity']); ?>
                                 </td>
                                 <td style="text-align: center;">
                                     <div style="display: inline-flex; gap: 6px;">
-                                        <a href="edit-drug.php?medicine_id=<?php echo (int) $d['medicine_id']; ?>" class="btn btn-outline" style="padding: 4px 8px; font-size: 0.75rem;" title="Edit / Update">Edit</a>
+                                        <a href="edit-drug.php?medicine_id=<?php echo (int) $d['medicine_id']; ?>&inventory_id=<?php echo (int) $d['inventory_id']; ?>" class="btn btn-outline" style="padding: 4px 8px; font-size: 0.75rem;" title="Edit / Update">Edit</a>
                                         <form action="../pharmacist_action.php" method="POST" style="display: inline;"
                                               data-name="<?php echo e($d['medicine_name']); ?>"
                                               onsubmit="return confirm('Remove ' + this.dataset.name + ' and all of its batches from your inventory?');">
@@ -199,15 +212,5 @@ $drugs    = array_filter($all_drugs, function ($d) use ($q, $cat) {
         </div>
     </main>
 </div>
-<script>
-function openSidebar() {
-    document.getElementById('sidebar').classList.add('open');
-    document.getElementById('sidebarOverlay').classList.add('show');
-}
-function closeSidebar() {
-    document.getElementById('sidebar').classList.remove('open');
-    document.getElementById('sidebarOverlay').classList.remove('show');
-}
-</script>
 </body>
 </html>

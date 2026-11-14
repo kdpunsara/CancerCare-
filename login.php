@@ -5,6 +5,21 @@
 session_start();
 require_once 'config/database.php'; // Adjust path if your file is elsewhere
 
+function pharmacist_login_destination(mysqli $conn, int $user_id): string
+{
+    $stmt = $conn->prepare(
+        "SELECT initial_inventory_completed FROM Pharmacist WHERE user_id = ? LIMIT 1"
+    );
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $profile = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    return $profile && (int) $profile['initial_inventory_completed'] === 1
+        ? 'modules/pharmacist/views/dashboard.php'
+        : 'modules/pharmacist/views/initial-inventory.php';
+}
+
 // If user is already logged in, redirect them to their correct dashboard
 if (isset($_SESSION['user_id'])) {
     $role = $_SESSION['role'];
@@ -12,7 +27,7 @@ if (isset($_SESSION['user_id'])) {
         case 'patient': header("Location: modules/patient/views/patient_dashboard.php"); break;
         case 'doctor': header("Location: modules/doctor/views/doctor_dashboard.php"); break;
         case 'staff': header("Location: modules/staff/views/staff_dashboard.php"); break;
-        case 'pharmacist': header("Location: modules/pharmacist/views/dashboard.php"); break;
+        case 'pharmacist': header("Location: " . pharmacist_login_destination($conn, (int) $_SESSION['user_id'])); break;
         case 'benefactor': header("Location: modules/benefactor/views/dashboard.php"); break;
         case 'admin': header("Location: modules/admin/views/admin_dashboard.php"); break;
         default: header("Location: home.html"); break;
@@ -69,7 +84,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     case 'patient': header("Location: modules/patient/views/patient_dashboard.php"); break;
                     case 'doctor': header("Location: modules/doctor/views/doctor_dashboard.php"); break;
                     case 'staff': header("Location: modules/staff/views/staff_dashboard.php"); break;
-                    case 'pharmacist': header("Location: modules/pharmacist/views/dashboard.php"); break;
+                    case 'pharmacist': header("Location: " . pharmacist_login_destination($conn, (int) $user['user_id'])); break;
                     case 'benefactor': header("Location: modules/benefactor/views/dashboard.php"); break;
                     case 'admin': header("Location: modules/admin/views/admin_dashboard.php"); break;
                     default: header("Location: home.html"); break;

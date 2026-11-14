@@ -3,7 +3,6 @@ $current_page = 'dashboard';
 $page_title   = 'Edit Medicine';
 require_once __DIR__ . '/../../../includes/pharmacist_init.php';
 
-$errors = [];
 $medicine_id = (int) ($_GET['medicine_id'] ?? $_POST['medicine_id'] ?? 0);
 $inventory_id = (int) ($_GET['inventory_id'] ?? $_POST['inventory_id'] ?? 0);
 $medicine = null;
@@ -64,7 +63,7 @@ sort($category_options);
 <div class="content">
 <div class="widget" style="max-width:800px;margin:0 auto;">
 <div class="widget-header"><h3>Edit Medicine Details</h3></div>
-<?php foreach ($errors as $err): ?><div class="alert alert-error"><?php echo e($err); ?></div><?php endforeach; ?>
+<?php flash_render(); ?>
 <form class="pure-form" action="../pharmacist_action.php" method="POST">
 <?php echo csrf_field(); ?><input type="hidden" name="action" value="update_drug"><input type="hidden" name="medicine_id" value="<?php echo (int)$medicine_id; ?>">
 <div class="form-group"><label for="drug-name">Medicine Name <span class="req">*</span></label><input type="text" id="drug-name" name="medicine_name" maxlength="200" value="<?php echo e($medicine['medicine_name']); ?>" required></div>
@@ -84,5 +83,4 @@ sort($category_options);
 <div class="form-actions-inline"><a href="dashboard.php" class="btn btn-outline">Cancel</a><button type="submit" class="btn btn-primary">Save Changes</button></div>
 </form>
 </div></div></main></div>
-<script>function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('sidebarOverlay').classList.add('show');}function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebarOverlay').classList.remove('show');}</script>
 </body></html>

@@ -7,7 +7,7 @@
 $host = 'localhost';
 $username = 'root';
 $password = ''; // Default XAMPP MySQL password is empty
-$database = 'caner care';
+$database = 'cancer care system';
 
 // 2. Create the Connection (Object-Oriented MySQLi)
 $conn = new mysqli($host, $username, $password, $database);

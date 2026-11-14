@@ -49,3 +49,14 @@ $nav_active = function (string $page) use ($current_page): string {
             </div>
         </div>
     </aside>
+<script>
+function openSidebar() {
+    document.getElementById('sidebar').classList.add('open');
+    document.getElementById('sidebarOverlay').classList.add('show');
+}
+
+function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('show');
+}
+</script>

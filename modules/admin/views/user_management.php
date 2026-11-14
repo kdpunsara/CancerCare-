@@ -11,7 +11,8 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
 $sql = "SELECT u.user_id, u.username, u.email, u.role, u.status, u.created_at,
                COALESCE(p.first_name, d.first_name, ms.first_name, ph.first_name, b.first_name, a.first_name) AS first_name,
                COALESCE(p.last_name, d.last_name, ms.last_name, ph.last_name, b.last_name, a.last_name) AS last_name,
-               COALESCE(d.specialization, ms.department, ph.pharmacy_name, 'General') AS department
+               COALESCE(d.specialization, ms.department, ph.pharmacy_name, 'General') AS department,
+               ph.initial_inventory_completed
         FROM User u
         LEFT JOIN Patient p ON u.user_id = p.user_id
         LEFT JOIN Doctor d ON u.user_id = d.user_id
@@ -32,7 +33,7 @@ if ($search !== '' || $role_filter !== '') {
     $users = array_values(array_filter($users, function ($u) use ($search, $role_filter) {
         if ($role_filter !== '' && $u['role'] !== $role_filter) return false;
         if ($search !== '') {
-            $hay = strtolower($u['first_name'] . ' ' . $u['last_name'] . ' ' . $u['email'] . ' ' . $u['user_id']);
+            $hay = strtolower($u['first_name'] . ' ' . $u['last_name'] . ' ' . $u['username'] . ' ' . $u['email'] . ' ' . $u['user_id']);
             if (strpos($hay, strtolower($search)) === false) return false;
         }
         return true;
@@ -40,7 +41,13 @@ if ($search !== '' || $role_filter !== '') {
 }
 
 $total_users = count($users);
-$users = array_slice($users, 0, 5); // Show up to 5 rows at a time
+$show_inventory_column = false;
+foreach ($users as $user) {
+    if ($user['role'] === 'pharmacist') {
+        $show_inventory_column = true;
+        break;
+    }
+}
 
 function statusBadge($status) {
     switch ($status) {
@@ -158,6 +165,7 @@ if (isset($_GET['edit'])) {
                                     <th>Name &amp; Email</th>
                                     <th>System Role</th>
                                     <th>Department</th>
+                                    <?php if ($show_inventory_column): ?><th>Initial Inventory</th><?php endif; ?>
                                     <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
@@ -165,18 +173,35 @@ if (isset($_GET['edit'])) {
                             <tbody>
                                 <?php if (empty($users)): ?>
                                     <tr>
-                                        <td colspan="6" style="text-align: center; padding: 20px; color: var(--text-muted);">No users found.</td>
+                                        <td colspan="<?php echo $show_inventory_column ? '7' : '6'; ?>" style="text-align: center; padding: 20px; color: var(--text-muted);">No users found.</td>
                                     </tr>
                                 <?php else: ?>
                                     <?php foreach ($users as $u): ?>
+                                        <?php
+                                        $display_name = trim(($u['first_name'] ?? '') . ' ' . ($u['last_name'] ?? ''));
+                                        if ($display_name === '') {
+                                            $display_name = $u['username'];
+                                        }
+                                        ?>
                                         <tr>
                                             <td class="med-name">USR-<?php echo str_pad($u['user_id'], 4, '0', STR_PAD_LEFT); ?></td>
                                             <td>
-                                                <strong><?php echo htmlspecialchars($u['first_name'] . ' ' . $u['last_name']); ?></strong><br>
-                                                <span style="font-size: 12.5px; color: var(--text-muted);"><?php echo htmlspecialchars($u['email']); ?></span>
+                                                <strong><?php echo htmlspecialchars($display_name, ENT_QUOTES, 'UTF-8'); ?></strong><br>
+                                                <span style="font-size: 12.5px; color: var(--text-muted);"><?php echo htmlspecialchars($u['email'], ENT_QUOTES, 'UTF-8'); ?></span>
                                             </td>
                                             <td><?php echo ucfirst($u['role']); ?></td>
                                             <td><?php echo htmlspecialchars($u['department']); ?></td>
+                                            <?php if ($show_inventory_column): ?>
+                                                <td>
+                                                    <?php if ($u['role'] === 'pharmacist'): ?>
+                                                        <span class="badge <?php echo (int) $u['initial_inventory_completed'] === 1 ? 'badge-done' : 'badge-pending'; ?>">
+                                                            <?php echo (int) $u['initial_inventory_completed'] === 1 ? 'Initial Inventory Completed' : 'Pending Initial Inventory'; ?>
+                                                        </span>
+                                                    <?php else: ?>
+                                                        —
+                                                    <?php endif; ?>
+                                                </td>
+                                            <?php endif; ?>
                                             <td><span class="badge <?php echo statusBadge($u['status']); ?>"><?php echo ucfirst($u['status']); ?></span></td>
                                             <td>
                                                 <a href="user_management.php?edit=<?php echo $u['user_id']; ?>" class="link-action" style="margin-right: 12px;">Edit</a>

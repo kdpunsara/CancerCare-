@@ -37,6 +37,10 @@ $current_page = $current_page ?? 'dashboard';
                 <span class="icon icon-profile" aria-hidden="true"></span>
                 <span class="nav-text">User Management</span>
             </a></li>
+            <li><a href="donor_management.php" class="nav-item <?php echo $current_page === 'donors' ? 'active' : ''; ?>">
+                <span class="icon icon-donations" aria-hidden="true"></span>
+                <span class="nav-text">Benefactor Management</span>
+            </a></li>
             <li><a href="operations.html" class="nav-item <?php echo $current_page === 'operations' ? 'active' : ''; ?>">
                 <span class="icon icon-transport" aria-hidden="true"></span>
                 <span class="nav-text">Operations</span>

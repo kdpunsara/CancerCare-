@@ -171,15 +171,5 @@ $batches = array_filter($all_batches, fn($b) => $filter === '' || $b['status'][0
         </div>
     </main>
 </div>
-<script>
-function openSidebar() {
-    document.getElementById('sidebar').classList.add('open');
-    document.getElementById('sidebarOverlay').classList.add('show');
-}
-function closeSidebar() {
-    document.getElementById('sidebar').classList.remove('open');
-    document.getElementById('sidebarOverlay').classList.remove('show');
-}
-</script>
 </body>
 </html>

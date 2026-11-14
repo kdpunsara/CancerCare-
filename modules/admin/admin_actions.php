@@ -93,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || isset($_GET['action'])) {
                     $address       = trim($_POST['address'] ?? '');
                     $license_no    = trim($_POST['license_no'] ?? '');
                     
-                    $sql_profile = "INSERT INTO Pharmacist (user_id, first_name, last_name, pharmacy_name, address, license_no) VALUES (?, ?, ?, ?, ?, ?)";
+                    $sql_profile = "INSERT INTO Pharmacist (user_id, first_name, last_name, pharmacy_name, address, license_no, initial_inventory_completed) VALUES (?, ?, ?, ?, ?, ?, 0)";
                     $stmt_p = $conn->prepare($sql_profile);
                     $stmt_p->bind_param("isssss", $new_user_id, $first_name, $last_name, $pharmacy_name, $address, $license_no);
                     $stmt_p->execute();
@@ -275,7 +275,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || isset($_GET['action'])) {
         // --- ACTION: TOGGLE USER STATUS (Activate/Deactivate) ---
         case 'toggle_status':
             $user_id = intval($_GET['user_id'] ?? 0);
-            $current_status = $_GET['current_status'] ?? 'active';
+            $user_id = intval($_POST['user_id'] ?? $_GET['user_id'] ?? 0);
+            $current_status = $_POST['current_status'] ?? $_GET['current_status'] ?? '';
+            if ($current_status === '') {
+                $status_stmt = $conn->prepare("SELECT status FROM User WHERE user_id = ?");
+                $status_stmt->bind_param("i", $user_id);
+                $status_stmt->execute();
+                $current_status = $status_stmt->get_result()->fetch_assoc()['status'] ?? '';
+            }
             $new_status = ($current_status === 'active') ? 'inactive' : 'active';
 
             $sql = "UPDATE User SET status = ? WHERE user_id = ?";
@@ -283,7 +290,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || isset($_GET['action'])) {
             $stmt->bind_param("si", $new_status, $user_id);
             $stmt->execute();
 
-            header("Location: views/user_management.php?msg=status_updated");
+            $return_to = ($_POST['return_to'] ?? '') === 'donor_management.php' ? 'donor_management.php' : 'user_management.php';
+            header("Location: views/" . $return_to . "?msg=status_updated");
+            exit();
+
+        case 'save_settings':
+            $settings = [
+                'site_name' => trim($_POST['site_name'] ?? ''),
+                'maintenance_mode' => $_POST['maintenance_mode'] ?? 'off',
+                'default_currency' => $_POST['default_currency'] ?? 'LKR'
+            ];
+            if ($settings['site_name'] === '' || !in_array($settings['maintenance_mode'], ['on', 'off'], true) || !in_array($settings['default_currency'], ['LKR', 'USD'], true)) {
+                header("Location: views/configuration.php?error=invalid");
+                exit();
+            }
+            $conn->query("CREATE TABLE IF NOT EXISTS AdminSetting (setting_key VARCHAR(100) PRIMARY KEY, setting_value VARCHAR(255) NOT NULL)");
+            $stmt_setting = $conn->prepare("INSERT INTO AdminSetting (setting_key, setting_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)");
+            foreach ($settings as $key => $value) {
+                $stmt_setting->bind_param("ss", $key, $value);
+                $stmt_setting->execute();
+            }
+            header("Location: views/configuration.php?saved=1");
+            exit();
+
+        case 'update_donation':
+            $donation_id = (int) ($_POST['donation_id'] ?? 0);
+            $status = $_POST['status'] ?? 'Verified';
+            if (!in_array($status, ['Verified', 'Rejected'], true) || $donation_id <= 0) {
+                header("Location: views/donor_management.php?error=invalid_donation");
+                exit();
+            }
+            $stmt_donation = $conn->prepare("UPDATE Donation SET status = ? WHERE donation_id = ? AND status = 'Pending Verification'");
+            $stmt_donation->bind_param("si", $status, $donation_id);
+            $stmt_donation->execute();
+            header("Location: views/donor_management.php?" . ($stmt_donation->affected_rows ? 'msg=donation_updated' : 'error=donation_not_pending'));
             exit();
 
         default:

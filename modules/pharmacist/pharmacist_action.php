@@ -15,6 +15,160 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $action = $_POST['action'] ?? '';
 
 switch ($action) {
+    case 'initial_register':
+        if ($initial_inventory_completed) {
+            pharmacist_redirect('views/dashboard.php');
+        }
+
+        $medicine_ids = $_POST['medicine_id'] ?? [];
+        $batches = $_POST['batch_number'] ?? [];
+        $expiries = $_POST['expiry_date'] ?? [];
+        $quantities = $_POST['initial_stock'] ?? [];
+        $entries = [];
+        $errors = [];
+        $row_count = is_array($medicine_ids) ? count($medicine_ids) : 0;
+
+        if (!csrf_valid()) {
+            $errors[] = 'Security check failed. Please reload the page and try again.';
+        } elseif ($row_count > 100) {
+            $errors[] = 'Please submit no more than 100 medicine records at once.';
+        }
+
+        for ($i = 0; $i < $row_count; $i++) {
+            $values = [
+                'medicine_id' => (int) ($medicine_ids[$i] ?? 0),
+                'batch_number' => trim((string) ($batches[$i] ?? '')),
+                'expiry_date' => trim((string) ($expiries[$i] ?? '')),
+                'initial_stock' => trim((string) ($quantities[$i] ?? '')),
+            ];
+            $is_empty = $values['medicine_id'] === 0 && $values['batch_number'] === ''
+                && $values['expiry_date'] === '' && $values['initial_stock'] === '';
+            if ($is_empty) {
+                continue;
+            }
+            if ($values['medicine_id'] < 1 || $values['batch_number'] === ''
+                || text_len($values['batch_number']) > 50) {
+                $errors[] = 'Each medicine must be selected from the Medicine Master and have a valid batch number.';
+                break;
+            }
+            if ($values['initial_stock'] === '' || !ctype_digit($values['initial_stock'])) {
+                $errors[] = 'Initial stock quantities must be whole numbers of 0 or more.';
+                break;
+            }
+            $expiry = DateTime::createFromFormat('Y-m-d', $values['expiry_date']);
+            if (!$expiry || $expiry->format('Y-m-d') !== $values['expiry_date'] || $values['expiry_date'] < date('Y-m-d')) {
+                $errors[] = 'Expired or invalid medicines cannot be registered.';
+                break;
+            }
+            $entries[] = $values;
+        }
+
+        if (count($entries) < 10 && !$errors) {
+            $errors[] = 'At least 10 valid medicine records are required.';
+        }
+
+        $seen_batches = [];
+        $seen_medicines = [];
+        foreach ($entries as $entry) {
+            $medicine_key = (string) $entry['medicine_id'];
+            $batch_key = $medicine_key . "\0" . strtolower($entry['batch_number']);
+            if (isset($seen_batches[$batch_key])) {
+                $errors[] = 'Duplicate medicine and batch entries are not allowed.';
+                break;
+            }
+            $seen_batches[$batch_key] = true;
+            $seen_medicines[$medicine_key] = true;
+        }
+        if (count($seen_medicines) < 10 && !$errors) {
+            $errors[] = 'At least 10 different medicines are required. Different batches do not count as different medicines.';
+        }
+
+        if ($errors) {
+            flash_set('error', $errors[0]);
+            pharmacist_redirect('views/initial-inventory.php');
+        }
+
+        try {
+            $conn->begin_transaction();
+            foreach ($entries as $entry) {
+                $stmt = $conn->prepare("SELECT medicine_id, medicine_name FROM Medicine WHERE medicine_id = ? LIMIT 1 FOR UPDATE");
+                $stmt->bind_param("i", $entry['medicine_id']);
+                $stmt->execute();
+                $existing = $stmt->get_result()->fetch_assoc();
+                $stmt->close();
+                if (!$existing) {
+                    throw new RuntimeException('One or more selected medicines no longer exists in the Medicine Master.');
+                }
+                $medicine_id = (int) $existing['medicine_id'];
+
+                $stmt = $conn->prepare(
+                    "SELECT inventory_id FROM PharmacyInventory
+                     WHERE pharmacist_user_id = ? AND medicine_id = ? AND LOWER(batch_number) = LOWER(?)
+                     LIMIT 1"
+                );
+                $stmt->bind_param("iis", $pharmacist_id, $medicine_id, $entry['batch_number']);
+                $stmt->execute();
+                $duplicate = $stmt->get_result()->fetch_assoc();
+                $stmt->close();
+                if ($duplicate) {
+                    $quantity = (int) $entry['initial_stock'];
+                    $stmt = $conn->prepare(
+                        "UPDATE PharmacyInventory SET stock_quantity = stock_quantity + ?, expiry_date = ?
+                         WHERE inventory_id = ? AND pharmacist_user_id = ?"
+                    );
+                    $stmt->bind_param("isii", $quantity, $entry['expiry_date'], $duplicate['inventory_id'], $pharmacist_id);
+                    $stmt->execute();
+                    $stmt->close();
+                } else {
+                    $quantity = (int) $entry['initial_stock'];
+                    $stmt = $conn->prepare(
+                        "INSERT INTO PharmacyInventory (pharmacist_user_id, medicine_id, stock_quantity, batch_number, expiry_date)
+                         VALUES (?, ?, ?, ?, ?)"
+                    );
+                    $stmt->bind_param("iiiss", $pharmacist_id, $medicine_id, $quantity, $entry['batch_number'], $entry['expiry_date']);
+                    $stmt->execute();
+                    $stmt->close();
+                }
+            }
+
+            $stmt = $conn->prepare(
+                "SELECT COUNT(DISTINCT medicine_id) AS medicine_count
+                 FROM PharmacyInventory WHERE pharmacist_user_id = ?"
+            );
+            $stmt->bind_param("i", $pharmacist_id);
+            $stmt->execute();
+            $medicine_count = (int) $stmt->get_result()->fetch_assoc()['medicine_count'];
+            $stmt->close();
+            if ($medicine_count < 10) {
+                throw new RuntimeException('At least 10 different medicines are required.');
+            }
+
+            $stmt = $conn->prepare(
+                "UPDATE Pharmacist
+                 SET initial_inventory_completed = 1, initial_inventory_completed_at = NOW()
+                 WHERE user_id = ?"
+            );
+            $stmt->bind_param("i", $pharmacist_id);
+            $stmt->execute();
+            $stmt->close();
+            $conn->commit();
+
+            log_action($conn, $pharmacist_id, 'INITIAL_INVENTORY_COMPLETE', 'Pharmacist', $pharmacist_id,
+                "Completed initial inventory registration with {$medicine_count} different medicines");
+            flash_set('success', 'Initial inventory completed. Welcome to your pharmacy dashboard.');
+            pharmacist_redirect('views/dashboard.php');
+        } catch (mysqli_sql_exception $ex) {
+            $conn->rollback();
+            error_log($ex->getMessage());
+            flash_set('error', 'Database error: the initial inventory could not be saved.');
+            pharmacist_redirect('views/initial-inventory.php');
+        } catch (RuntimeException $ex) {
+            $conn->rollback();
+            flash_set('error', $ex->getMessage());
+            pharmacist_redirect('views/initial-inventory.php');
+        }
+        break;
+
     case 'delete_inventory':
         if (!csrf_valid()) {
             flash_set('error', 'Security check failed. Please try again.');
@@ -52,10 +206,7 @@ switch ($action) {
     case 'add_drug':
         $errors = [];
         $fields = [
-            'medicine_name' => trim($_POST['medicine_name'] ?? ''),
-            'generic_name' => trim($_POST['generic_name'] ?? ''),
-            'category' => trim($_POST['category'] ?? ''),
-            'manufacturer' => trim($_POST['manufacturer'] ?? ''),
+            'medicine_id' => (int) ($_POST['medicine_id'] ?? 0),
             'initial_stock' => trim($_POST['initial_stock'] ?? ''),
             'batch_number' => trim($_POST['batch_number'] ?? ''),
             'expiry_date' => trim($_POST['expiry_date'] ?? ''),
@@ -64,17 +215,8 @@ switch ($action) {
         if (!csrf_valid()) {
             $errors[] = 'Security check failed. Please reload the page and try again.';
         }
-        if ($fields['medicine_name'] === '' || text_len($fields['medicine_name']) > 200) {
-            $errors[] = 'Drug name is required (max 200 characters).';
-        }
-        if (text_len($fields['generic_name']) > 200) {
-            $errors[] = 'Generic name is too long (max 200 characters).';
-        }
-        if ($fields['category'] === '' || text_len($fields['category']) > 100) {
-            $errors[] = 'Category is required (max 100 characters).';
-        }
-        if (text_len($fields['manufacturer']) > 150) {
-            $errors[] = 'Manufacturer is too long (max 150 characters).';
+        if ($fields['medicine_id'] < 1) {
+            $errors[] = 'Please select a medicine from the central Medicine Master.';
         }
         if ($fields['initial_stock'] === '' || !ctype_digit($fields['initial_stock'])) {
             $errors[] = 'Initial stock must be a whole number (0 or more).';
@@ -99,47 +241,56 @@ switch ($action) {
             $qty = (int) $fields['initial_stock'];
             $conn->begin_transaction();
 
+            $stmt = $conn->prepare("SELECT medicine_id, medicine_name FROM Medicine WHERE medicine_id = ? LIMIT 1 FOR UPDATE");
+            $stmt->bind_param("i", $fields['medicine_id']);
+            $stmt->execute();
+            $medicine = $stmt->get_result()->fetch_assoc();
+            $stmt->close();
+            if (!$medicine) {
+                throw new RuntimeException('The selected medicine does not exist in the central Medicine Master.');
+            }
+            $medicine_id = (int) $medicine['medicine_id'];
+
             $stmt = $conn->prepare(
-                "SELECT medicine_id FROM Medicine
-                 WHERE LOWER(medicine_name) = LOWER(?)
-                   AND LOWER(COALESCE(generic_name, '')) = LOWER(?)
-                   AND LOWER(COALESCE(manufacturer, '')) = LOWER(?)
+                "SELECT inventory_id FROM PharmacyInventory
+                 WHERE pharmacist_user_id = ? AND medicine_id = ? AND LOWER(batch_number) = LOWER(?)
                  LIMIT 1"
             );
-            $stmt->bind_param("sss", $fields['medicine_name'], $fields['generic_name'], $fields['manufacturer']);
+            $stmt->bind_param("iis", $pharmacist_id, $medicine_id, $fields['batch_number']);
             $stmt->execute();
-            $existing = $stmt->get_result()->fetch_assoc();
+            $duplicate = $stmt->get_result()->fetch_assoc();
             $stmt->close();
-
-            if ($existing) {
-                $medicine_id = (int) $existing['medicine_id'];
-            } else {
-                $generic = $fields['generic_name'] !== '' ? $fields['generic_name'] : null;
-                $maker = $fields['manufacturer'] !== '' ? $fields['manufacturer'] : null;
-                $stmt = $conn->prepare("INSERT INTO Medicine (medicine_name, generic_name, category, manufacturer) VALUES (?, ?, ?, ?)");
-                $stmt->bind_param("ssss", $fields['medicine_name'], $generic, $fields['category'], $maker);
+            if ($duplicate) {
+                $stmt = $conn->prepare(
+                    "UPDATE PharmacyInventory SET stock_quantity = stock_quantity + ?, expiry_date = ?
+                     WHERE inventory_id = ? AND pharmacist_user_id = ?"
+                );
+                $stmt->bind_param("isii", $qty, $fields['expiry_date'], $duplicate['inventory_id'], $pharmacist_id);
                 $stmt->execute();
-                $medicine_id = $conn->insert_id;
+                $stmt->close();
+            } else {
+                $stmt = $conn->prepare(
+                    "INSERT INTO PharmacyInventory (pharmacist_user_id, medicine_id, stock_quantity, batch_number, expiry_date)
+                     VALUES (?, ?, ?, ?, ?)"
+                );
+                $stmt->bind_param("iiiss", $pharmacist_id, $medicine_id, $qty, $fields['batch_number'], $fields['expiry_date']);
+                $stmt->execute();
                 $stmt->close();
             }
-
-            $stmt = $conn->prepare(
-                "INSERT INTO PharmacyInventory (pharmacist_user_id, medicine_id, stock_quantity, batch_number, expiry_date)
-                 VALUES (?, ?, ?, ?, ?)"
-            );
-            $stmt->bind_param("iiiss", $pharmacist_id, $medicine_id, $qty, $fields['batch_number'], $fields['expiry_date']);
-            $stmt->execute();
-            $stmt->close();
             $conn->commit();
 
             log_action($conn, $pharmacist_id, 'INVENTORY_ADD', 'Medicine', $medicine_id,
-                "Registered {$fields['medicine_name']} with batch {$fields['batch_number']} (qty {$qty}, expires {$fields['expiry_date']})");
-            flash_set('success', $fields['medicine_name'] . ' was added to the catalog and your inventory.');
+                "Registered {$medicine['medicine_name']} with batch {$fields['batch_number']} (qty {$qty}, expires {$fields['expiry_date']})");
+            flash_set('success', $medicine['medicine_name'] . ' was added to your inventory.');
             pharmacist_redirect('views/dashboard.php');
         } catch (mysqli_sql_exception $ex) {
             $conn->rollback();
             error_log($ex->getMessage());
             flash_set('error', 'Database error: the medicine could not be saved. Please try again.');
+            pharmacist_redirect('views/add-drug.php');
+        } catch (RuntimeException $ex) {
+            $conn->rollback();
+            flash_set('error', $ex->getMessage());
             pharmacist_redirect('views/add-drug.php');
         }
         break;
@@ -148,28 +299,12 @@ switch ($action) {
         $errors = [];
         $medicine_id = (int) ($_POST['medicine_id'] ?? 0);
         $inventory_id = (int) ($_POST['inventory_id'] ?? 0);
-        $medicine_name = trim($_POST['medicine_name'] ?? '');
-        $generic_name = trim($_POST['generic_name'] ?? '');
-        $category = trim($_POST['category'] ?? '');
-        $manufacturer = trim($_POST['manufacturer'] ?? '');
         $quantity = trim($_POST['quantity'] ?? '');
         $batch_number = trim($_POST['batch_number'] ?? '');
         $expiry_date = trim($_POST['expiry_date'] ?? '');
 
         if (!csrf_valid()) {
             $errors[] = 'Security check failed. Please reload the page and try again.';
-        }
-        if ($medicine_name === '' || text_len($medicine_name) > 200) {
-            $errors[] = 'Medicine name is required (max 200 characters).';
-        }
-        if (text_len($generic_name) > 200) {
-            $errors[] = 'Generic name is too long (max 200 characters).';
-        }
-        if ($category === '' || text_len($category) > 100) {
-            $errors[] = 'Category is required (max 100 characters).';
-        }
-        if (text_len($manufacturer) > 150) {
-            $errors[] = 'Manufacturer is too long (max 150 characters).';
         }
         if ($quantity === '' || !ctype_digit($quantity)) {
             $errors[] = 'Quantity must be a whole number (0 or more).';
@@ -181,6 +316,8 @@ switch ($action) {
         $exp = DateTime::createFromFormat('Y-m-d', $expiry_date);
         if (!$exp || $exp->format('Y-m-d') !== $expiry_date) {
             $errors[] = 'A valid expiry date is required.';
+        } elseif ($expiry_date < date('Y-m-d')) {
+            $errors[] = 'Expired stock cannot be saved.';
         }
         if ($inventory_id < 1) {
             $errors[] = 'Please select a stock batch.';
@@ -204,13 +341,18 @@ switch ($action) {
                 throw new RuntimeException('The selected stock batch was not found.');
             }
 
-            $generic_db = $generic_name !== '' ? $generic_name : null;
-            $manufacturer_db = $manufacturer !== '' ? $manufacturer : null;
-
-            $stmt = $conn->prepare("UPDATE Medicine SET medicine_name = ?, generic_name = ?, category = ?, manufacturer = ? WHERE medicine_id = ?");
-            $stmt->bind_param("ssssi", $medicine_name, $generic_db, $category, $manufacturer_db, $medicine_id);
+            $stmt = $conn->prepare(
+                "SELECT inventory_id FROM PharmacyInventory
+                 WHERE pharmacist_user_id = ? AND medicine_id = ? AND LOWER(batch_number) = LOWER(?)
+                   AND inventory_id <> ? LIMIT 1"
+            );
+            $stmt->bind_param("iisi", $pharmacist_id, $medicine_id, $batch_number, $inventory_id);
             $stmt->execute();
+            $duplicate = $stmt->get_result()->fetch_assoc();
             $stmt->close();
+            if ($duplicate) {
+                throw new RuntimeException('That medicine and batch already exists in your inventory.');
+            }
 
             $qty = (int) $quantity;
             $stmt = $conn->prepare("UPDATE PharmacyInventory SET stock_quantity = ?, batch_number = ?, expiry_date = ? WHERE inventory_id = ? AND pharmacist_user_id = ? AND medicine_id = ?");
@@ -220,8 +362,8 @@ switch ($action) {
 
             $conn->commit();
             log_action($conn, $pharmacist_id, 'INVENTORY_EDIT', 'Medicine', $medicine_id,
-                "Updated {$medicine_name}: qty {$qty}, batch {$batch_number}, expiry {$expiry_date}");
-            flash_set('success', 'Medicine details updated successfully.');
+                "Updated pharmacy stock: qty {$qty}, batch {$batch_number}, expiry {$expiry_date}");
+            flash_set('success', 'Pharmacy stock updated successfully.');
             pharmacist_redirect('views/dashboard.php');
         } catch (mysqli_sql_exception $ex) {
             $conn->rollback();

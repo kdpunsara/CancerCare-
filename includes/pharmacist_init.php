@@ -24,7 +24,8 @@ $pharmacist_id = (int) $_SESSION['user_id'];
 // ---- Load pharmacist profile (User + Pharmacist tables) ----
 $stmt = $conn->prepare(
     "SELECT u.username, u.email, u.phone, u.status,
-            p.first_name, p.last_name, p.pharmacy_name, p.address, p.license_no
+            p.first_name, p.last_name, p.pharmacy_name, p.address, p.license_no,
+            p.initial_inventory_completed
      FROM User u
      LEFT JOIN Pharmacist p ON p.user_id = u.user_id
      WHERE u.user_id = ? AND u.role = 'pharmacist'
@@ -45,8 +46,17 @@ if (!$pharmacist || $pharmacist['status'] !== 'active') {
 
 $pharmacist['first_name'] = $pharmacist['first_name'] ?? $pharmacist['username'];
 $pharmacist['last_name']  = $pharmacist['last_name'] ?? '';
+$initial_inventory_completed = (int) ($pharmacist['initial_inventory_completed'] ?? 0) === 1;
 $pharmacist_name     = trim($pharmacist['first_name'] . ' ' . $pharmacist['last_name']);
 $pharmacist_initials = strtoupper(first_char($pharmacist['first_name']) . first_char($pharmacist['last_name']));
+
+$is_initial_inventory_page = basename($_SERVER['SCRIPT_FILENAME'] ?? '') === 'initial-inventory.php';
+$is_initial_inventory_submit = basename($_SERVER['SCRIPT_FILENAME'] ?? '') === 'pharmacist_action.php'
+    && ($_POST['action'] ?? '') === 'initial_register';
+if (!$initial_inventory_completed && !$is_initial_inventory_page && !$is_initial_inventory_submit) {
+    header('Location: initial-inventory.php');
+    exit();
+}
 
 // ==========================================
 // HELPER FUNCTIONS
