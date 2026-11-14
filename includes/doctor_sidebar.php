@@ -36,7 +36,7 @@ $current_page = $current_page ?? 'dashboard';
                 <span class="nav-text">Appointments</span>
             </a></li>
             <li><a href="doctor_mypatients.php" class="nav-item <?php echo $current_page === 'mypatients' ? 'active' : ''; ?>">
-                <span class="icon icon-profile" aria-hidden="true"></span>
+                <span class="icon icon-patients" aria-hidden="true"></span>
                 <span class="nav-text">My Patients</span>
             </a></li>
             <li><a href="doctor_prescription.php" class="nav-item <?php echo $current_page === 'prescriptions' ? 'active' : ''; ?>">
